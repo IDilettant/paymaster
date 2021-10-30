@@ -1,0 +1,39 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: check-docstring-first
+    -   id: check-json
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: end-of-file-fixer
+    -   id: check-added-large-files
+    -   id: check-byte-order-marker
+    -   id: detect-private-key
+    -   id: check-ast
+-   repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v1.5.5
+    hooks:
+    -   id: autopep8
+-   repo: local
+    hooks:
+    -   id: flake8
+        name: flake8
+        description: wemake-python-styleguide enforcement
+        entry: make test
+        language: system
+        types: [python]
+    -   id: mypy
+        name: mypy
+        entry: make mypy-check
+        language: system
+        types: [ python ]
+-   repo: https://github.com/asottile/add-trailing-comma
+    rev: v2.1.0
+    hooks:
+    -   id: add-trailing-comma
+-   repo: https://github.com/pycqa/isort
+    rev: 5.7.0
+    hooks:
+      - id: isort
