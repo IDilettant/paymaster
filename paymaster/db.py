@@ -1,8 +1,6 @@
 """Database module."""
-import asyncio
 from typing import Optional, Tuple, List
 
-import asyncpg
 from asyncpg import Connection
 
 FRACTIONAL_VALUE = 100
