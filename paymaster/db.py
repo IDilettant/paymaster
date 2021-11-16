@@ -3,6 +3,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from asyncpg import Connection
 
+from paymaster.currencies import BASE_CURRENCY
+
 FRACTIONAL_VALUE = 100
 
 
@@ -98,11 +100,11 @@ async def send_between_users(
         )
 
 
-async def get_balance(user_id: int, db_con: Connection, convert_to: str = '') -> float:
+async def get_balance(user_id: int, db_con: Connection, convert_to: str = BASE_CURRENCY) -> float:
     rate_query = """SELECT rate_to_base FROM currencies WHERE currencies.cur_name = $1;"""
     balance = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE  # TODO: exception for no acc
     # TODO: exception for no currency
-    cur_rate = await db_con.fetchval(rate_query, convert_to) if convert_to else 1
+    cur_rate = await db_con.fetchval(rate_query, convert_to) if convert_to != BASE_CURRENCY else 1
     return round(balance * cur_rate, 2)  # Should I convert here or in app?
 
 
