@@ -1,29 +1,30 @@
 from datetime import datetime
-from asyncpg import Connection
 
 import pytest
-
+from asyncpg import Connection
 from paymaster.app import API_KEY
 from paymaster.currencies import get_currencies_rates
 from paymaster.db import (
+    FRACTIONAL_VALUE,
     create_acc,
-    delete_acc,
-    debiting_user_balance,
     crediting_user_balance,
-    send_between_users,
-    get_balance,
+    debiting_user_balance,
+    delete_acc,
     fetch_acc_history,
     fetch_currency_rate,
+    get_balance,
+    has_account,
+    send_between_users,
     update_currencies,
-    FRACTIONAL_VALUE,
 )
 
-pytestmark = pytest.mark.asyncio  # All test coroutines will be treated as marked.
+# All test coroutines will be treated as marked.
+pytestmark = pytest.mark.asyncio
 USER_ID = 73
 
 
 async def test_db_exists(db_conn: Connection, db_name: str = 'treasury'):
-    query = """ SELECT datname FROM pg_database 
+    query = """ SELECT datname FROM pg_database
                 WHERE datname = $1;"""
     resp = await db_conn.fetchval(query, db_name)
     assert resp == db_name
@@ -38,7 +39,7 @@ async def test_db_exists(db_conn: Connection, db_name: str = 'treasury'):
     ],
 )
 async def test_tables_exists(table_name: str, db_conn: Connection):
-    query = """ SELECT table_name FROM information_schema.tables 
+    query = """ SELECT table_name FROM information_schema.tables
                 WHERE table_name = $1;"""
     resp = await db_conn.fetchval(query, table_name)
     assert resp == table_name
@@ -117,3 +118,9 @@ async def test_fetch_currency_rate(db_conn: Connection):
     await update_currencies(cur_rates, db_conn)
     cur_rate = await fetch_currency_rate('RUB', db_conn)
     assert cur_rate == 1
+
+
+async def test_has_account(db_conn: Connection):
+    assert await has_account(USER_ID, db_conn) is False
+    await create_acc(USER_ID, db_conn)
+    assert await has_account(USER_ID, db_conn)
