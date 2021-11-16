@@ -24,7 +24,7 @@ async def delete_acc(user_id: int, db_con: Connection) -> None:
         await db_con.execute(acc_query, user_id)
 
 
-async def crediting_funds(
+async def debiting_user_balance(
         user_id: int, 
         qty_value: int, 
         db_con: Connection,
@@ -42,7 +42,7 @@ async def crediting_funds(
         await db_con.execute(query, user_id, deal_with, description, fractional_qty_value)  # TODO: write the exception
 
 
-async def debiting_funds(
+async def crediting_user_balance(
         user_id: int, 
         qty_value: int, 
         db_con: Connection, 
@@ -75,7 +75,7 @@ async def send_between_users(
 ) -> None:
     async with db_con.transaction():
         # description = f'Paying to {recipient_id} for {transaction_aim}'
-        await debiting_funds(
+        await crediting_user_balance(
             user_id=sender_id, 
             deal_with=recipient_id, 
             qty_value=qty_value, 
@@ -83,7 +83,7 @@ async def send_between_users(
             db_con=db_con,
         )
         # description = f'Getting payment from {sender_id} for {transaction_aim}'
-        await crediting_funds(
+        await debiting_user_balance(
             user_id=recipient_id,
             deal_with=sender_id,
             qty_value=qty_value,

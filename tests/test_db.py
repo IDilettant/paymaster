@@ -8,13 +8,14 @@ from paymaster.currencies import get_currencies_rates
 from paymaster.db import (
     create_acc,
     delete_acc,
-    crediting_funds,
-    debiting_funds,
+    debiting_user_balance,
+    crediting_user_balance,
     send_between_users,
     get_balance,
     fetch_acc_history,
     fetch_currency_rate,
-    update_currencies, FRACTIONAL_VALUE,
+    update_currencies,
+    FRACTIONAL_VALUE,
 )
 
 pytestmark = pytest.mark.asyncio  # All test coroutines will be treated as marked.
@@ -61,7 +62,7 @@ async def test_delete_acc(db_conn: Connection):
 async def test_crediting_funds(db_conn: Connection):
     qty_value = 333
     await create_acc(USER_ID, db_conn)
-    await crediting_funds(USER_ID, qty_value, db_conn)
+    await debiting_user_balance(USER_ID, qty_value, db_conn)
     balance = await get_balance(USER_ID, db_conn)
     assert balance == qty_value
 
@@ -69,8 +70,8 @@ async def test_crediting_funds(db_conn: Connection):
 async def test_debiting_funds(db_conn: Connection):
     qty_value = 333
     await create_acc(USER_ID, db_conn)
-    await crediting_funds(USER_ID, qty_value * 2, db_conn)
-    await debiting_funds(USER_ID, qty_value, db_conn)
+    await debiting_user_balance(USER_ID, qty_value * 2, db_conn)
+    await crediting_user_balance(USER_ID, qty_value, db_conn)
     balance = await get_balance(USER_ID, db_conn)
     assert balance == qty_value
 
@@ -81,7 +82,7 @@ async def test_send_between_users(db_conn: Connection):
     recipient_user_id = 123
     await create_acc(USER_ID, db_conn)
     await create_acc(recipient_user_id, db_conn)
-    await crediting_funds(USER_ID, qty_value, db_conn)
+    await debiting_user_balance(USER_ID, qty_value, db_conn)
     await send_between_users(USER_ID, recipient_user_id, send_amount, db_conn)
     sender_balance = await get_balance(USER_ID, db_conn)
     recipient_balance = await get_balance(recipient_user_id, db_conn)
@@ -92,8 +93,8 @@ async def test_send_between_users(db_conn: Connection):
 async def test_fetch_acc_history(db_conn: Connection):
     qty_value = 333
     await create_acc(USER_ID, db_conn)
-    await crediting_funds(USER_ID, qty_value, db_conn)
-    await debiting_funds(USER_ID, qty_value, db_conn)
+    await debiting_user_balance(USER_ID, qty_value, db_conn)
+    await crediting_user_balance(USER_ID, qty_value, db_conn)
     history = await fetch_acc_history(USER_ID, db_conn)
     assert isinstance(history, tuple)
     assert all(map(lambda record: isinstance(record, dict), history))
