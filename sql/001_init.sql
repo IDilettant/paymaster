@@ -1,8 +1,3 @@
---SELECT 'CREATE DATABASE treasury;'
---WHERE NOT EXISTS (SELECT * FROM pg_database WHERE datname = 'treasury';)\gexec  --CREATE DATABASE IF NOT EXISTS treasury; ?
-
-
-
 CREATE TABLE accounts (
     id              SERIAL          PRIMARY KEY,
     user_id         INTEGER         NOT NULL UNIQUE,
