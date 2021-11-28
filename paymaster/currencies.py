@@ -2,7 +2,7 @@ from typing import Any, List, Tuple
 
 import aiohttp
 
-BASE_CURRENCY = 'RUB'
+BASE_CURRENCY = 'rub'
 
 
 async def get_currencies_rates(
