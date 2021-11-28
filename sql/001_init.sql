@@ -2,8 +2,6 @@
 --WHERE NOT EXISTS (SELECT * FROM pg_database WHERE datname = 'treasury';)\gexec  --CREATE DATABASE IF NOT EXISTS treasury; ?
 
 
-DROP TABLE IF EXISTS accounts, transactions, currencies;
-
 
 CREATE TABLE accounts (
     id              SERIAL          PRIMARY KEY,
@@ -19,7 +17,8 @@ CREATE TABLE transactions (
     deal_with       INTEGER         NOT NULL,
     description     VARCHAR(255)    NOT NULL,
     qty_change      BIGINT          NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES accounts (id)
+    FOREIGN KEY (account_id) REFERENCES accounts (id),
+    FOREIGN KEY (deal_with) REFERENCES accounts (id)
 );
 
 
