@@ -13,7 +13,7 @@ CREATE TABLE transactions (
     description     VARCHAR(255)    NOT NULL,
     qty_change      BIGINT          NOT NULL,
     FOREIGN KEY (account_id) REFERENCES accounts (id),
-    FOREIGN KEY (deal_with) REFERENCES accounts (id)
+    FOREIGN KEY (deal_with) REFERENCES accounts (user_id)
 );
 
 
