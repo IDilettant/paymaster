@@ -36,5 +36,4 @@ class Transaction(BaseModel):
 
 class PageOut(BaseModel):
     status_code: int = Field(status.HTTP_200_OK, ge=100, lt=600)
-    page_number: PositiveInt
-    content: Tuple[Dict]
+    content: Tuple[Dict, ...]

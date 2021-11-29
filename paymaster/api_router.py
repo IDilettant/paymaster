@@ -52,7 +52,7 @@ async def delete_user_acc(
     return Response(status_code=status.HTTP_205_RESET_CONTENT)
 
 
-@router.post("/balance/change", status_code=status.HTTP_201_CREATED)
+@router.post('/balance/change', status_code=status.HTTP_201_CREATED)
 async def change_user_balance(
         request: Operation,
         connection: Connection = Depends(get_connection_from_pool),
@@ -77,7 +77,7 @@ async def change_user_balance(
     return Response(status_code=status.HTTP_201_CREATED)
 
 
-@router.post("/transactions/transfer", status_code=status.HTTP_201_CREATED)
+@router.post('/transactions/transfer', status_code=status.HTTP_201_CREATED)
 async def transfer_between_users(
         request: Transaction,
         connection: Connection = Depends(get_connection_from_pool),
@@ -119,7 +119,7 @@ async def get_user_balance(
     return Balance(user_id=user_id, balance=balance, currency=currency)
 
 
-@router.get("/transactions/history/user_id/{user_id}", response_model=PageOut, status_code=status.HTTP_200_OK)
+@router.get('/transactions/history/user_id/{user_id}', response_model=PageOut, status_code=status.HTTP_200_OK)
 async def get_user_history(
         user_id: PositiveInt = Path(..., title='', description=''),
         page_size: int = Query(20, gt=0, le=100, description=''),
@@ -141,7 +141,4 @@ async def get_user_history(
         )
     for record in history:
         record.update({'total': record['total'] / 100})
-    return PageOut(
-        page_number=page_number,
-        content=history,
-    )
+    return PageOut(content=history)

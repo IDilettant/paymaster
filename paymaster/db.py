@@ -18,7 +18,7 @@ async def create_acc(user_id: int, db_con: Connection) -> None:
 
 
 async def delete_acc(user_id: int, db_con: Connection) -> None:
-    op_query = """  DELETE FROM transactions
+    tx_query = """  DELETE FROM transactions
                     WHERE account_id = (
                         SELECT id FROM accounts
                         WHERE user_id = $1
@@ -26,7 +26,7 @@ async def delete_acc(user_id: int, db_con: Connection) -> None:
     acc_query = """ DELETE FROM accounts
                     WHERE user_id = ($1);"""
     async with db_con.transaction():
-        await db_con.execute(op_query, user_id)
+        await db_con.execute(tx_query, user_id)
         await db_con.execute(acc_query, user_id)
 
 
@@ -112,7 +112,7 @@ async def fetch_acc_history(
         raise AccountError(f'Has no registered account with id: {user_id}')
 
 
-async def _update_currencies(cur_rates: List[Tuple[Any]], db_con: Connection) -> None:  # TODO: make updating regular
+async def update_currencies(cur_rates: List[Tuple[Any]], db_con: Connection) -> None:  # TODO: make updating regular
     query = """ INSERT INTO currencies (cur_name, rate_to_base)
                 VALUES ($1, $2)
                 ON CONFLICT (cur_name)
@@ -154,7 +154,7 @@ async def _debiting_balance(
         description: Optional[str] = None,
 ) -> None:
     deal_with = user_id if deal_with is None else deal_with
-    description = 'funds withdrawal' if description is None else description
+    description = 'withdraw' if description is None else description
     fractional_qty_value = int(qty_value * FRACTIONAL_VALUE)
     query = """ INSERT INTO transactions (
                     account_id, deal_with, description, qty_change

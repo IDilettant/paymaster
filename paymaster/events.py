@@ -1,10 +1,14 @@
 import os
 import pathlib
 from typing import Callable
+from asyncpg import Pool
 
 import asyncpg
 from fastapi import FastAPI
 from yoyo import get_backend, read_migrations
+
+from paymaster.currencies import get_currencies_rates
+from paymaster.db import update_currencies
 
 
 def make_migration(dsn: str):
@@ -18,8 +22,11 @@ def make_migration(dsn: str):
 def create_start_app_handler(app: FastAPI) -> Callable:
     async def start_app() -> None:
         dsn = os.getenv('DSN')
+        api_key = os.getenv('API_KEY')
         app.state.pool = await asyncpg.create_pool(dsn)
         make_migration(dsn)
+        cur_rates = await get_currencies_rates(api_key)
+        await update_currencies(cur_rates, app.state.pool)
     return start_app
 
 
