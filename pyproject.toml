@@ -8,7 +8,6 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 fastapi = "^0.70.0"
-aiohttp = {extras = ["speedups"], version = "^3.8.0"}
 uvicorn = "^0.15.0"
 asyncpg = "^0.24.0"
 python-dotenv = "^0.19.2"
@@ -22,10 +21,10 @@ mypy = "^0.910"
 pre-commit = "^2.15.0"
 wemake-python-styleguide = "^0.15.3"
 pytest-asyncio = "^0.16.0"
-pytest-aiohttp = "^0.3.0"
 testcontainers = "^3.4.2"
 asgi-lifespan = "^1.0.1"
 psycopg2-binary = "^2.9.2"
+pytest-httpx = "^0.15.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
