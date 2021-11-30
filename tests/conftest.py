@@ -17,7 +17,8 @@ async def dsn() -> Pool:
 
 @pytest.fixture
 async def app() -> FastAPI:
-    from paymaster.main import get_application  # local import for testing purpose
+    from paymaster.main import \
+        get_application  # local import for testing purpose
 
     yield get_application()
 
@@ -36,3 +37,10 @@ async def client(initialized_app: FastAPI) -> AsyncClient:
         base_url="http://testserver",
     ) as client:
         yield client
+
+
+@pytest.fixture
+async def db_conn(initialized_app):
+    async with initialized_app.state.pool as pool:
+        async with pool.acquire() as conn:
+            yield conn

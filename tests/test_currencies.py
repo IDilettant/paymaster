@@ -1,8 +1,7 @@
-import pytest
-from pytest_httpx import HTTPXMock
 import httpx
-
+import pytest
 from paymaster.currencies import BASE_CURRENCY, get_currencies_rates
+from pytest_httpx import HTTPXMock
 
 pytestmark = pytest.mark.asyncio
 

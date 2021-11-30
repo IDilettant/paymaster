@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import asyncpg
 from asyncpg import Connection
+from paymaster.data_schemas import OperationType
 from paymaster.exceptions import AccountError, BalanceValueError, CurrencyError
 
 FRACTIONAL_VALUE = Decimal(100)
@@ -37,14 +38,14 @@ async def change_balance(
         db_con: Connection,
         description: Optional[str] = None,
 ):
-    if operation_type == 'credit':
+    if operation_type == OperationType.replenishment:
         await _crediting_balance(
             user_id=user_id,
             qty_value=qty_value,
             db_con=db_con,
             description=description,
         )
-    elif operation_type == 'debit':
+    elif operation_type == OperationType.withdraw:
         await _debiting_balance(
             user_id=user_id,
             qty_value=qty_value,
@@ -65,14 +66,14 @@ async def transfer_between_accs(
             user_id=sender_id,
             deal_with=recipient_id,
             qty_value=qty_value,
-            description=description,
+            description='outcoming payment' if description is None else description,
             db_con=db_con,
         )
         await _crediting_balance(
             user_id=recipient_id,
             deal_with=sender_id,
             qty_value=qty_value,
-            description=description,
+            description='incoming payment' if description is None else description,
             db_con=db_con,
         )
 
@@ -129,7 +130,7 @@ async def _crediting_balance(
         description: Optional[str] = None,
 ) -> None:
     deal_with = user_id if deal_with is None else deal_with
-    description = 'balance replenishment' if description is None else description
+    description = 'replenishment' if description is None else description
     fractional_qty_value = int(qty_value * FRACTIONAL_VALUE)
     query = """ INSERT INTO transactions (
                     account_id, deal_with, description, qty_change
@@ -167,8 +168,10 @@ async def _debiting_balance(
     async with db_con.transaction():
         balance = await _compute_balance(user_id, db_con)
         if balance - abs(fractional_qty_value) >= 0:
-            # Make quantity value negative
-            await db_con.execute(query, user_id, deal_with, description, -fractional_qty_value)
+            try:
+                await db_con.execute(query, user_id, deal_with, description, -fractional_qty_value)  # Make quantity value negative
+            except asyncpg.exceptions.ForeignKeyViolationError:
+                raise AccountError(f'Has no registered account with id: {deal_with}')
         else:
             raise BalanceValueError(
                 f'Insufficient funds on the account: {user_id}',

@@ -1,4 +1,5 @@
 from typing import Any, List, Tuple
+
 import httpx
 
 BASE_CURRENCY = 'rub'

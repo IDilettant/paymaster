@@ -1,14 +1,12 @@
 import os
 import pathlib
 from typing import Callable
-from asyncpg import Pool
 
 import asyncpg
 from fastapi import FastAPI
-from yoyo import get_backend, read_migrations
-
 from paymaster.currencies import get_currencies_rates
 from paymaster.db import update_currencies
+from yoyo import get_backend, read_migrations
 
 
 def make_migration(dsn: str):

@@ -1,7 +1,7 @@
+import logging
 from typing import List, Optional
 
 import status
-import logging
 from asyncpg import Connection
 from fastapi import (
     APIRouter,
