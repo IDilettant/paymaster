@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field, PositiveInt, condecimal
 
 
 class OperationType(str, Enum):
-    credit: str = 'credit'
-    debit: str = 'debit'
+    replenishment: str = 'replenishment'
+    withdraw: str = 'withdraw'
 
 
 class Balance(BaseModel):
@@ -31,7 +31,7 @@ class Transaction(BaseModel):
     sender_id: PositiveInt
     recipient_id: PositiveInt
     total: condecimal(gt=Decimal(0), decimal_places=2)
-    description: str
+    description: str = Field(None)
 
 
 class PageOut(BaseModel):
