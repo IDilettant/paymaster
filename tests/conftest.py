@@ -12,7 +12,7 @@ from testcontainers.postgres import PostgresContainer
 @pytest.fixture
 async def dsn() -> Pool:
     with PostgresContainer("postgres:12") as postgres:
-        yield postgres.get_connection_url().replace('+psycopg2', '')  # TODO: write comment about replacement
+        yield postgres.get_connection_url().replace('+psycopg2', '')  # Delete from dsn url unnecessary path part
 
 
 @pytest.fixture
