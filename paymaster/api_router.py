@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 import status
+import logging
 from asyncpg import Connection
 from fastapi import (
     APIRouter,
@@ -25,6 +26,7 @@ from paymaster.dependencies import get_connection_from_pool
 from paymaster.exceptions import AccountError, BalanceValueError
 from pydantic import PositiveInt
 
+LOGGER = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -35,7 +37,8 @@ async def create_user_acc(
 ):
     try:
         await create_acc(user_id=user_id, db_con=connection)
-    except AccountError:
+    except AccountError as exc:
+        LOGGER.warning(exc)
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail='Account already exists',
@@ -65,11 +68,13 @@ async def change_user_balance(
             db_con=connection,
             description=request.description,
         )
-    except AccountError:
+    except AccountError as exc:
+        LOGGER.warning(exc)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail='User not found',
         )
-    except BalanceValueError:
+    except BalanceValueError as exc:
+        LOGGER.warning(exc)
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail='Insufficient funds on the debiting account',
@@ -82,6 +87,13 @@ async def transfer_between_users(
         request: Transaction,
         connection: Connection = Depends(get_connection_from_pool),
 ):
+    if request.sender_id == request.recipient_id:
+        exc = HTTPException(
+            status_code=status.HTTP_409_CONFLICT, 
+            detail="Sender and recipient accounts it's the same account",
+        )
+        LOGGER.warning(exc)
+        raise exc
     try:
         await transfer_between_accs(
             sender_id=request.sender_id,
@@ -91,11 +103,13 @@ async def transfer_between_users(
             db_con=connection,
         )
     except AccountError as exc:
+        LOGGER.warning(exc)
         message = exc.args[0]
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=message,
         )
-    except BalanceValueError:
+    except BalanceValueError as exc:
+        LOGGER.warning(exc)
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail='Insufficient funds on the debiting account',
@@ -114,8 +128,9 @@ async def get_user_balance(
     currency = currency.upper()
     try:
         balance = await get_balance(user_id=user_id, db_con=connection, convert_to=currency)
-    except AccountError:
-        raise HTTPException(status_code=404, detail="User not found")
+    except AccountError as exc:
+        LOGGER.warning(exc)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return Balance(user_id=user_id, balance=balance, currency=currency)
 
 
@@ -135,7 +150,8 @@ async def get_user_history(
             page_number=page_number,
             order_by=order_by,
         )
-    except AccountError:
+    except AccountError as exc:
+        LOGGER.warning(exc)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found",
         )
