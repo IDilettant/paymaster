@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+    
+    postgres:
+        image: postgres:12-alpine
+        environment:
+            POSTGRES_HOST_AUTH_METHOD: trust
+            POSTGRES_DB: treasury
+        ports:
+            - "5432"
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+
+    paymaster:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: paymaster
+        restart: unless-stopped
+        env_file:
+            - .env
+        volumes:
+            - "./paymaster/:/usr/src/app/paymaster"
+        ports:
+            -  "5000:5000"
+        depends_on:
+            - postgres
+
+volumes: 
+    pgdata:
