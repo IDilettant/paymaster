@@ -11,7 +11,7 @@ from testcontainers.postgres import PostgresContainer
 
 @pytest.fixture
 async def dsn() -> Pool:
-    with PostgresContainer("postgres:12") as postgres:
+    with PostgresContainer("postgres:12-alpine") as postgres:
         yield postgres.get_connection_url().replace('+psycopg2', '')  # Delete from dsn url unnecessary path part
 
 
@@ -37,10 +37,3 @@ async def client(initialized_app: FastAPI) -> AsyncClient:
         base_url="http://testserver",
     ) as client:
         yield client
-
-
-@pytest.fixture
-async def db_conn(initialized_app):
-    async with initialized_app.state.pool as pool:
-        async with pool.acquire() as conn:
-            yield conn
