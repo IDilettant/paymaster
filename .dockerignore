@@ -1,0 +1,6 @@
+.venv/
+.coverage
+coverage.xml
+.pytest_cache/
+.idea/
+.env
