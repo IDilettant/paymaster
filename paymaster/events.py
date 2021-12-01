@@ -10,7 +10,8 @@ from yoyo import get_backend, read_migrations
 
 
 def make_migration(dsn: str):
-    file_path = str(pathlib.Path('__file__').parent / '..' / 'sql')
+    file_path = str(pathlib.Path(__file__).parent / '..' / 'sql')
+    print(file_path)
     backend = get_backend(dsn)
     migrations = read_migrations(file_path)
     with backend.lock():
