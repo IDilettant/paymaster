@@ -1,3 +1,5 @@
+include make-compose.mk
+
 install:
 	poetry install
 
@@ -24,5 +26,8 @@ mypy-check:
 
 complexity-check:
 	poetry run flake8 --max-cognitive-complexity=5 $(file)
+
+start-app:
+	poetry run uvicorn --host=0.0.0.0:5000 paymaster.main:app
 
 .PHONY: test paymaster install lint build
