@@ -1,7 +1,8 @@
 CREATE TABLE accounts (
     id              SERIAL          PRIMARY KEY,
     user_id         INTEGER         NOT NULL UNIQUE,
-    created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP(2)
+    created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP(2),
+    status          VARCHAR(7)      DEFAULT 'active'
 );
 
 
