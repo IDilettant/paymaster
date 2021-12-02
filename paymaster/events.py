@@ -1,3 +1,4 @@
+"""Migrations and up/shutdown handlers."""
 import os
 import pathlib
 from typing import Callable
@@ -9,9 +10,13 @@ from paymaster.db import update_currencies
 from yoyo import get_backend, read_migrations
 
 
-def make_migration(dsn: str):
+def make_migration(dsn: str) -> None:
+    """Make migrations from sql directory.
+
+    Args:
+        dsn: database url
+    """
     file_path = str(pathlib.Path(__file__).parent / '..' / 'sql')
-    print(file_path)
     backend = get_backend(dsn)
     migrations = read_migrations(file_path)
     with backend.lock():
@@ -19,7 +24,15 @@ def make_migration(dsn: str):
 
 
 def create_start_app_handler(app: FastAPI) -> Callable:
-    async def start_app() -> None:
+    """Create handler for pre-started app preparing.
+
+    Args:
+        app: app instance
+
+    Returns:
+        started handler
+    """
+    async def start_app() -> None:  # noqa: WPS430
         dsn = os.getenv('DSN')
         api_key = os.getenv('API_KEY')
         app.state.pool = await asyncpg.create_pool(dsn)
@@ -30,6 +43,14 @@ def create_start_app_handler(app: FastAPI) -> Callable:
 
 
 def create_stop_app_handler(app: FastAPI) -> Callable:
-    async def stop_app() -> None:
+    """Create handler for pre-shutdown app preparing.
+
+    Args:
+        app: app instance
+
+    Returns:
+        shutdown handler
+    """
+    async def stop_app() -> None:  # noqa: WPS430
         await app.state.pool.close()
     return stop_app
