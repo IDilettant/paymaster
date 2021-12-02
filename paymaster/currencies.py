@@ -26,5 +26,5 @@ async def get_currencies_rates(
         response = resp.json()
         cur_rates = response['conversion_rates']
         return [
-            tuple(currency, cur_rates[currency]) for currency in cur_rates
+            (currency, cur_rates[currency]) for currency in cur_rates
         ]
