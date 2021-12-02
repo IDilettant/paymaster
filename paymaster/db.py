@@ -126,8 +126,8 @@ async def get_balance(
         AccountError: user account isn't registered
     """
     if await _has_account(user_id, db_con):
-        balance = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE
-        cur_rate = 1 if convert_to is None else await _fetch_currency_rate(
+        balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE  # noqa: E501
+        cur_rate: Decimal = Decimal(1) if convert_to is None else await _fetch_currency_rate(  # noqa: E501
             cur_name=convert_to,
             db_con=db_con,
         )
@@ -142,7 +142,7 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
     page_size: int = 20,
     order_by_date: Optional[SortKey] = None,
     order_by_total: Optional[SortKey] = None,
-) -> Tuple[Dict]:
+) -> Tuple[Dict[str, str]]:
     """Fetch user account transactions history.
 
     Args:
@@ -175,7 +175,8 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
     history = await db_con.fetch(query, user_id, offset, page_size)
 
     if history:
-        return tuple(map(dict, history))
+        history = tuple(map(dict, history))
+        return history  # noqa: WPS331
     raise AccountError(f'Has no registered account with id: {user_id}')
 
 
@@ -275,7 +276,7 @@ async def _fetch_currency_rate(cur_name: str, db_con: Connection) -> Decimal:
     query = """ SELECT rate_to_base
                 FROM currencies
                 WHERE cur_name = $1;"""
-    rate = await db_con.fetchval(query, cur_name)
+    rate: float = await db_con.fetchval(query, cur_name)
     if rate is None:
         raise CurrencyError(f'Unsupported currency type: {cur_name}')
     return Decimal(rate)
@@ -294,7 +295,10 @@ async def _compute_balance(user_id: int, db_con: Connection) -> Decimal:
     return Decimal(0) if balance is None else Decimal(balance)
 
 
-async def _get_sort_keys(order_by_date: SortKey, order_by_total: SortKey):
+async def _get_sort_keys(
+    order_by_date: Optional[SortKey],
+    order_by_total: Optional[SortKey],
+):
     date_key = 'date'
     total_key = 'total'
     if order_by_date is None:
