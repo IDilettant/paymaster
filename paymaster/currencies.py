@@ -1,15 +1,15 @@
 """Currencies module."""
-from typing import Any, List, Tuple
+from typing import List, Tuple
 
 import httpx
 
 BASE_CURRENCY = 'rub'
 
 
-async def get_currencies_rates(
+async def get_currencies_rates(  # noqa: WPS234
     api_key: str,
     base_currency: str = BASE_CURRENCY,
-) -> List[Tuple[Any]]:
+) -> List[Tuple[str, float]]:
     """Get currencies rates from remote server.
 
     Args:

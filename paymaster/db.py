@@ -2,7 +2,7 @@
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from asyncpg import Connection, asyncpg
+from asyncpg import Connection, exceptions
 from paymaster.data_schemas import OperationType, SortKey
 from paymaster.exceptions import AccountError, BalanceValueError, CurrencyError
 
@@ -225,7 +225,7 @@ async def _crediting_balance(
                 description,
                 fractional_qty_value,
             )
-        except asyncpg.exceptions.NotNullViolationError as exc:
+        except exceptions.NotNullViolationError as exc:
             raise AccountError(
                 f'Has no registered account with id: {user_id}',
             ) from exc
@@ -263,7 +263,7 @@ async def _debiting_balance(
                     description,
                     -fractional_qty_value,  # Make quantity value negative
                 )
-            except asyncpg.exceptions.ForeignKeyViolationError:
+            except exceptions.ForeignKeyViolationError:
                 raise AccountError(f'Has no registered account with id: {deal_with}')  # noqa: E501
         else:
             raise BalanceValueError(
