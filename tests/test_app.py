@@ -21,7 +21,8 @@ async def test_app(client: AsyncClient):
     response = await client.post(f'/account/delete/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_205_RESET_CONTENT
 
-    await client.post(f'/account/create/user_id/{first_user_id}')
+    response = await client.post(f'/account/create/user_id/{first_user_id}')
+    assert response.status_code == status.HTTP_201_CREATED
     response = await client.post(
         '/balance/change',
         json={
@@ -143,5 +144,5 @@ async def test_app(client: AsyncClient):
     response = await client.get(f'/transactions/history/user_id/{nonexistent_user}')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    # response = await client.post(f'/account/delete/user_id/{first_user_id}')
-    # assert response.status_code == status.HTTP_205_RESET_CONTENT
+    response = await client.post(f'/account/delete/user_id/{first_user_id}')
+    assert response.status_code == status.HTTP_205_RESET_CONTENT
