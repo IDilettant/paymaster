@@ -34,7 +34,6 @@ from pydantic import PositiveInt
 
 LOGGER = logging.getLogger(__name__)
 router = APIRouter()
-pool_connection = Depends(get_connection_from_pool)
 
 
 @router.post(
@@ -43,7 +42,7 @@ pool_connection = Depends(get_connection_from_pool)
 )
 async def create_user_acc(
     user_id: PositiveInt,
-    connection: Connection = pool_connection,
+    connection: Connection = Depends(get_connection_from_pool),
 ) -> Response:
     """Create user account."""
     try:
@@ -63,7 +62,7 @@ async def create_user_acc(
 )
 async def delete_user_acc(
     user_id: PositiveInt,
-    connection: Connection = pool_connection,
+    connection: Connection = Depends(get_connection_from_pool),
 ):
     """Delete user account."""
     await delete_acc(user_id=user_id, db_con=connection)
@@ -73,7 +72,7 @@ async def delete_user_acc(
 @router.post('/balance/change', status_code=status.HTTP_201_CREATED)
 async def change_user_balance(
     request: Operation,
-    connection: Connection = pool_connection,
+    connection: Connection = Depends(get_connection_from_pool),
 ):
     """Change user balance."""
     try:
@@ -101,7 +100,7 @@ async def change_user_balance(
 @router.post('/transactions/transfer', status_code=status.HTTP_201_CREATED)
 async def transfer_between_users(
     request: Transaction,
-    connection: Connection = pool_connection,
+    connection: Connection = Depends(get_connection_from_pool),
 ):
     """Transfer funds from one account to another."""
     if request.sender_id == request.recipient_id:
@@ -144,7 +143,7 @@ async def get_user_balance(
     currency: Optional[str] = Query(
         BASE_CURRENCY, min_length=3, max_length=3, description='',
     ),
-    connection: Connection = pool_connection,
+    connection: Connection = Depends(get_connection_from_pool),
 ):
     """Get user account balance."""
     currency = currency.upper()
@@ -174,7 +173,7 @@ async def get_user_history(  # noqa: WPS211
     page_number: PositiveInt = Query(1, description=''),
     order_by_date: SortKey = Query(None, description=''),
     order_by_total: SortKey = Query(None, description=''),
-    connection: Connection = pool_connection,
+    connection: Connection = Depends(get_connection_from_pool),
 ):
     """Get history of user account transactions."""
     try:
