@@ -9,7 +9,7 @@ load_dotenv()
 
 def get_application() -> FastAPI:
     """Get app instance with handlers and routes.
-    
+
     Returns:
         application instance
     """
