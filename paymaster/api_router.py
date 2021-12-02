@@ -1,7 +1,7 @@
+"""API routes module."""
 import logging
-from typing import List, Optional
+from typing import Optional
 
-import status
 from asyncpg import Connection
 from fastapi import (
     APIRouter,
@@ -13,7 +13,13 @@ from fastapi import (
     status,
 )
 from paymaster.currencies import BASE_CURRENCY
-from paymaster.data_schemas import Balance, Operation, PageOut, Transaction
+from paymaster.data_schemas import (
+    Balance,
+    Operation,
+    PageOut,
+    SortKey,
+    Transaction,
+)
 from paymaster.db import (
     change_balance,
     create_acc,
@@ -28,13 +34,18 @@ from pydantic import PositiveInt
 
 LOGGER = logging.getLogger(__name__)
 router = APIRouter()
+pool_connection = Depends(get_connection_from_pool)
 
 
-@router.post('/account/create/user_id/{user_id}', status_code=status.HTTP_201_CREATED)
+@router.post(
+    '/account/create/user_id/{user_id}',
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_user_acc(
-        user_id: PositiveInt,
-        connection: Connection = Depends(get_connection_from_pool),
-):
+    user_id: PositiveInt,
+    connection: Connection = pool_connection,
+) -> Response:
+    """Create user account."""
     try:
         await create_acc(user_id=user_id, db_con=connection)
     except AccountError as exc:
@@ -46,20 +57,25 @@ async def create_user_acc(
     return Response(status_code=status.HTTP_201_CREATED)
 
 
-@router.post('/account/delete/user_id/{user_id}', status_code=status.HTTP_205_RESET_CONTENT)
+@router.post(
+    '/account/delete/user_id/{user_id}',
+    status_code=status.HTTP_205_RESET_CONTENT,
+)
 async def delete_user_acc(
-        user_id: PositiveInt,
-        connection: Connection = Depends(get_connection_from_pool),
+    user_id: PositiveInt,
+    connection: Connection = pool_connection,
 ):
+    """Delete user account."""
     await delete_acc(user_id=user_id, db_con=connection)
     return Response(status_code=status.HTTP_205_RESET_CONTENT)
 
 
 @router.post('/balance/change', status_code=status.HTTP_201_CREATED)
 async def change_user_balance(
-        request: Operation,
-        connection: Connection = Depends(get_connection_from_pool),
+    request: Operation,
+    connection: Connection = pool_connection,
 ):
+    """Change user balance."""
     try:
         await change_balance(
             user_id=request.user_id,
@@ -84,12 +100,13 @@ async def change_user_balance(
 
 @router.post('/transactions/transfer', status_code=status.HTTP_201_CREATED)
 async def transfer_between_users(
-        request: Transaction,
-        connection: Connection = Depends(get_connection_from_pool),
+    request: Transaction,
+    connection: Connection = pool_connection,
 ):
+    """Transfer funds from one account to another."""
     if request.sender_id == request.recipient_id:
         exc = HTTPException(
-            status_code=status.HTTP_409_CONFLICT, 
+            status_code=status.HTTP_409_CONFLICT,
             detail="Sender and recipient accounts it's the same account",
         )
         LOGGER.warning(exc)
@@ -117,43 +134,62 @@ async def transfer_between_users(
     return Response(status_code=status.HTTP_201_CREATED)
 
 
-@router.get('/balance/get/user_id/{user_id}', response_model=Balance, status_code=status.HTTP_200_OK)
+@router.get(
+    '/balance/get/user_id/{user_id}',
+    response_model=Balance,
+    status_code=status.HTTP_200_OK,
+)
 async def get_user_balance(
-        user_id: int = Path(..., title='', description=''),
-        currency: Optional[str] = Query(
-            BASE_CURRENCY, min_length=3, max_length=3, description='',
-        ),
-        connection: Connection = Depends(get_connection_from_pool),
+    user_id: int = Path(..., title='', description=''),
+    currency: Optional[str] = Query(
+        BASE_CURRENCY, min_length=3, max_length=3, description='',
+    ),
+    connection: Connection = pool_connection,
 ):
+    """Get user account balance."""
     currency = currency.upper()
     try:
-        balance = await get_balance(user_id=user_id, db_con=connection, convert_to=currency)
+        balance = await get_balance(
+            user_id=user_id,
+            db_con=connection,
+            convert_to=currency,
+        )
     except AccountError as exc:
         LOGGER.warning(exc)
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='User not found',
+        )
     return Balance(user_id=user_id, balance=balance, currency=currency)
 
 
-@router.get('/transactions/history/user_id/{user_id}', response_model=PageOut, status_code=status.HTTP_200_OK)
-async def get_user_history(
-        user_id: PositiveInt = Path(..., title='', description=''),
-        page_size: int = Query(20, gt=0, le=100, description=''),
-        page_number: PositiveInt = Query(1, description=''),
-        order_by: List[str] = Query(None, description='', regex="^fixedquery$"),  # TODO: regex validation
-        connection: Connection = Depends(get_connection_from_pool),
+@router.get(
+    '/transactions/history/user_id/{user_id}',
+    response_model=PageOut,
+    status_code=status.HTTP_200_OK,
+)
+async def get_user_history(  # noqa: WPS211
+    user_id: PositiveInt = Path(..., title='', description=''),
+    page_size: int = Query(20, gt=0, le=100, description=''),  # noqa: WPS432
+    page_number: PositiveInt = Query(1, description=''),
+    order_by_date: SortKey = Query(None, description=''),
+    order_by_total: SortKey = Query(None, description=''),
+    connection: Connection = pool_connection,
 ):
+    """Get history of user account transactions."""
     try:
         history = await fetch_acc_history(
             user_id=user_id,
             db_con=connection,
             page_size=page_size,
             page_number=page_number,
-            order_by=order_by,
+            order_by_date=order_by_date,
+            order_by_total=order_by_total,
         )
     except AccountError as exc:
         LOGGER.warning(exc)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found",
+            status_code=status.HTTP_404_NOT_FOUND, detail='User not found',
         )
     for record in history:
         record.update({'total': record['total'] / 100})
