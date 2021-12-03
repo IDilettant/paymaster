@@ -2,12 +2,16 @@
 import os
 from typing import AsyncIterator
 
+import httpx
 import pytest
 from asgi_lifespan import LifespanManager
 from asyncpg import Pool
 from fastapi import FastAPI
 from httpx import AsyncClient
+from paymaster.currencies import BASE_CURRENCY
+from pytest_httpx import HTTPXMock
 from testcontainers.postgres import PostgresContainer
+from tests.test_currencies import DATA
 
 
 @pytest.fixture
@@ -18,9 +22,22 @@ async def dsn() -> Pool:
 
 
 @pytest.fixture
-async def app() -> AsyncIterator[FastAPI]:
+def non_mocked_hosts() -> list:
+    return ['testserver']
+
+
+@pytest.fixture
+async def app(httpx_mock: HTTPXMock) -> AsyncIterator[FastAPI]:
     from paymaster.main import \
         get_application  # local import for testing purpose
+
+    api_key = os.getenv('API_KEY')
+    httpx_mock.add_response(
+        method='GET',
+        url=f'https://v6.exchangerate-api.com/v6/{api_key}/latest/{BASE_CURRENCY}',
+        json=DATA,
+        status_code=200,
+    )
 
     yield get_application()
 

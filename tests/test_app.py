@@ -3,6 +3,7 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 from paymaster.data_schemas import OperationType
+from tests.test_currencies import USD_RATE
 
 pytestmark = pytest.mark.asyncio
 
@@ -12,15 +13,18 @@ async def test_app(client: AsyncClient):
     second_user_id = 555
     nonexistent_user = 321
 
+    # test creating user
     response = await client.post(f'/account/create/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_201_CREATED
 
     response = await client.post(f'/account/create/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_409_CONFLICT
 
+    # test deleting user without history
     response = await client.post(f'/account/delete/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_205_RESET_CONTENT
 
+    # test change user balance
     response = await client.post(f'/account/create/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_201_CREATED
     response = await client.post(
@@ -67,6 +71,7 @@ async def test_app(client: AsyncClient):
     )
     assert response.status_code == status.HTTP_201_CREATED
 
+    # test transfer funds between users accounts
     response = await client.post(
         '/transactions/transfer',
         json={
@@ -118,6 +123,7 @@ async def test_app(client: AsyncClient):
     )
     assert response.status_code == status.HTTP_409_CONFLICT
 
+    # test getting user balance
     response = await client.get(f'/balance/get/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_200_OK
     response = response.json()
@@ -126,9 +132,15 @@ async def test_app(client: AsyncClient):
     assert response.status_code == status.HTTP_200_OK
     response = response.json()
     assert response['balance'] == 40
+    # test getting user balance with convert to currency
+    response = await client.get(f'/balance/get/user_id/{first_user_id}?currency=usd')
+    response = response.json()
+    assert response['balance'] == round(50 * USD_RATE, 2)
+    # test for nonexistent user
     response = await client.get(f'/balance/get/user_id/{nonexistent_user}')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    # test transaction history with sort
     response = await client.get(f'/transactions/history/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_200_OK
     response = response.json()['content']
@@ -144,5 +156,6 @@ async def test_app(client: AsyncClient):
     response = await client.get(f'/transactions/history/user_id/{nonexistent_user}')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    # test deleted user with history
     response = await client.post(f'/account/delete/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_205_RESET_CONTENT
