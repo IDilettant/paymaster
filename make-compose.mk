@@ -18,5 +18,3 @@ compose-stop:
 
 compose-restart:
 	docker-compose restart
-
-compose-setup: compose-down compose-build app-setup
