@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-    
+
     postgres:
         image: postgres:12-alpine
         environment:
@@ -27,5 +27,5 @@ services:
         depends_on:
             - postgres
 
-volumes: 
+volumes:
     pgdata:
