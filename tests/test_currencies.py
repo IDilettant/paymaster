@@ -8,7 +8,10 @@ pytestmark = pytest.mark.asyncio
 
 async def test_get_currencies_rates(httpx_mock: HTTPXMock):
     def custom_response(request: httpx.Request, *args, **kwargs):
-        data = {'result': 'success', 'base_code': 'RUB', 'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': 0.01326}}
+        data = {
+            'result': 'success', 'base_code': 'RUB',
+            'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': 0.01326},
+        }
         return httpx.Response(
             status_code=200, json=data,
         )
