@@ -22,7 +22,7 @@ pre-commit:
 	poetry run pre-commit run --all-files
 
 mypy-check:
-	poetry run mypy --namespace-packages tests paymaster
+	poetry run mypy --namespace-packages paymaster
 
 complexity-check:
 	poetry run flake8 --max-cognitive-complexity=5 $(file)
