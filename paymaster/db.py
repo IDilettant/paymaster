@@ -1,6 +1,6 @@
 """Database module."""
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from asyncpg import Connection, exceptions
 from paymaster.data_schemas import OperationType, SortKey
@@ -181,7 +181,7 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
 
 
 async def update_currencies(
-    cur_rates: List[Tuple[Any]],
+    cur_rates: List[Tuple[str, float]],
     db_con: Connection,
 ) -> None:
     """Update currencies rates table.
@@ -299,17 +299,17 @@ async def _get_sort_keys(
     order_by_date: Optional[SortKey],
     order_by_total: Optional[SortKey],
 ):
-    date_key = 'date'
-    total_key = 'total'
+    date_key: str = 'date'
+    total_key: str = 'total'
     if order_by_date is None:
-        order_by_date = 'DESC'
+        date_sort_order: str = 'DESC'
     else:
-        order_by_date = 'DESC' if order_by_date == SortKey.desc else 'ASC'
+        date_sort_order = 'DESC' if order_by_date == SortKey.desc else 'ASC'
     if order_by_total is not None:
-        order_by_total = 'DESC' if order_by_total == SortKey.desc else 'ASC'
-    coma = '' if order_by_total is None else ','
-    date_key = f'{date_key} {order_by_date}'
-    total_key = '' if order_by_total is None else f'{total_key} {order_by_total}'  # noqa: E501
+        total_sort_order: str = 'DESC' if order_by_total == SortKey.desc else 'ASC'  # noqa: E501
+    coma: str = '' if order_by_total is None else ','
+    date_key = f'{date_key} {date_sort_order}'
+    total_key = '' if order_by_total is None else f'{total_key} {total_sort_order}'  # noqa: E501
     return date_key, total_key, coma
 
 

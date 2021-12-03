@@ -1,9 +1,9 @@
 """Migrations and up/shutdown handlers."""
 import os
 import pathlib
-from typing import Callable
+from typing import Any, Callable, Coroutine, Optional
 
-import asyncpg
+from asyncpg import create_pool
 from fastapi import FastAPI
 from paymaster.currencies import get_currencies_rates
 from paymaster.db import update_currencies
@@ -23,7 +23,9 @@ def make_migration(dsn: str) -> None:
         backend.apply_migrations(backend.to_apply(migrations))
 
 
-def create_start_app_handler(app: FastAPI) -> Callable:
+def create_start_app_handler(
+    app: FastAPI,
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Create handler for pre-started app preparing.
 
     Args:
@@ -33,16 +35,19 @@ def create_start_app_handler(app: FastAPI) -> Callable:
         started handler
     """
     async def start_app() -> None:  # noqa: WPS430
-        dsn = os.getenv('DSN')
-        api_key = os.getenv('API_KEY')
-        app.state.pool = await asyncpg.create_pool(dsn)
-        make_migration(dsn)
+        dsn: Optional[str] = os.getenv('DSN')
+        api_key: Optional[str] = os.getenv('API_KEY')
+        app.state.pool = await create_pool(dsn)
+        if dsn is not None:
+            make_migration(dsn)
         cur_rates = await get_currencies_rates(api_key)
         await update_currencies(cur_rates, app.state.pool)
     return start_app
 
 
-def create_stop_app_handler(app: FastAPI) -> Callable:
+def create_stop_app_handler(
+    app: FastAPI,
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Create handler for pre-shutdown app preparing.
 
     Args:

@@ -1,6 +1,6 @@
 """API routes module."""
 import logging
-from typing import Optional
+from typing import Any, Dict, Tuple
 
 from asyncpg import Connection
 from fastapi import (
@@ -21,6 +21,7 @@ from paymaster.data_schemas import (
     Transaction,
 )
 from paymaster.db import (
+    FRACTIONAL_VALUE,
     change_balance,
     create_acc,
     delete_acc,
@@ -140,7 +141,7 @@ async def transfer_between_users(
 )
 async def get_user_balance(
     user_id: int = Path(..., title='', description=''),
-    currency: Optional[str] = Query(
+    currency: str = Query(
         BASE_CURRENCY, min_length=3, max_length=3, description='',
     ),
     connection: Connection = Depends(get_connection_from_pool),
@@ -177,7 +178,7 @@ async def get_user_history(  # noqa: WPS211
 ):
     """Get history of user account transactions."""
     try:
-        history = await fetch_acc_history(
+        history: Tuple[Dict[str, Any]] = await fetch_acc_history(
             user_id=user_id,
             db_con=connection,
             page_size=page_size,
@@ -191,5 +192,5 @@ async def get_user_history(  # noqa: WPS211
             status_code=status.HTTP_404_NOT_FOUND, detail='User not found',
         )
     for record in history:
-        record.update({'total': record['total'] / 100})
+        record.update({'total': record['total'] / FRACTIONAL_VALUE})
     return PageOut(content=history)
