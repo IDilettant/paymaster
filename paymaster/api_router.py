@@ -140,9 +140,12 @@ async def transfer_between_users(
     status_code=status.HTTP_200_OK,
 )
 async def get_user_balance(
-    user_id: int = Path(..., title='', description=''),
+    user_id: int = Path(..., description='external user id'),
     currency: str = Query(
-        BASE_CURRENCY, min_length=3, max_length=3, description='',
+        BASE_CURRENCY,
+        min_length=3,
+        max_length=3,
+        description='currency alias for balance value presentation',
     ),
     connection: Connection = Depends(get_connection_from_pool),
 ):
@@ -169,11 +172,11 @@ async def get_user_balance(
     status_code=status.HTTP_200_OK,
 )
 async def get_user_history(  # noqa: WPS211
-    user_id: PositiveInt = Path(..., title='', description=''),
-    page_size: int = Query(20, gt=0, le=100, description=''),  # noqa: WPS432
-    page_number: PositiveInt = Query(1, description=''),
-    order_by_date: SortKey = Query(None, description=''),
-    order_by_total: SortKey = Query(None, description=''),
+    user_id: PositiveInt = Path(..., title='', description='external user id'),
+    page_size: int = Query(20, gt=0, le=100, description='number of records per page'),  # noqa: WPS432 E501
+    page_number: PositiveInt = Query(1, description='nuber of neccessary page'),
+    order_by_date: SortKey = Query(None, description='sort order by transaction date'),  # noqa: E501
+    order_by_total: SortKey = Query(None, description='sort order by transaction total value'),  # noqa: E501
     connection: Connection = Depends(get_connection_from_pool),
 ):
     """Get history of user account transactions."""
