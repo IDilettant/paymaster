@@ -1,7 +1,7 @@
 """Responses and requests data schemas."""
 from decimal import Decimal
 from enum import Enum
-from typing import Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from fastapi import status
 from paymaster.currencies import BASE_CURRENCY
@@ -27,7 +27,7 @@ class Balance(BaseModel):
 
     status_code: int = Field(status.HTTP_200_OK, ge=100, lt=600)  # noqa: WPS432
     user_id: PositiveInt
-    balance: condecimal(decimal_places=2)
+    balance: Decimal = Field(condecimal(decimal_places=2))
     currency: str = Field(BASE_CURRENCY, min_length=3, max_length=3)
 
 
@@ -36,8 +36,8 @@ class Operation(BaseModel):
 
     operation: OperationType
     user_id: PositiveInt
-    total: condecimal(gt=Decimal(0), decimal_places=2)
-    description: str = None
+    total: Decimal = Field(condecimal(gt=Decimal(0), decimal_places=2))
+    description: Optional[str] = Field(None)
 
 
 class Transaction(BaseModel):
@@ -45,12 +45,11 @@ class Transaction(BaseModel):
 
     sender_id: PositiveInt
     recipient_id: PositiveInt
-    total: condecimal(gt=Decimal(0), decimal_places=2)
-    description: str = Field(None)
+    total: Decimal = Field(condecimal(gt=Decimal(0), decimal_places=2))
+    description: Optional[str] = Field(None)
 
 
 class PageOut(BaseModel):
     """Response model for user account transactions history request."""
 
-    status_code: int = Field(status.HTTP_200_OK, ge=100, lt=600)  # noqa: WPS432
-    content: Tuple[Dict, ...]  # noqa: WPS110
+    content: Tuple[Dict[str, Any], ...]  # noqa: WPS110
