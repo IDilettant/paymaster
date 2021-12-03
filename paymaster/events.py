@@ -4,6 +4,7 @@ import pathlib
 from typing import Any, Callable, Coroutine, Optional
 
 from asyncpg import create_pool
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from paymaster.currencies import get_currencies_rates
 from paymaster.db import update_currencies
@@ -35,6 +36,7 @@ def create_start_app_handler(
         started handler
     """
     async def start_app() -> None:  # noqa: WPS430
+        load_dotenv()
         dsn: Optional[str] = os.getenv('DSN')
         api_key: Optional[str] = os.getenv('API_KEY')
         app.state.pool = await create_pool(dsn)
