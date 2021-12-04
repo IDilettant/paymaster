@@ -21,8 +21,8 @@ async def test_app(client: AsyncClient):
     assert response.status_code == status.HTTP_409_CONFLICT
 
     # test deleting user without history
-    response = await client.post(f'/account/delete/user_id/{first_user_id}')
-    assert response.status_code == status.HTTP_205_RESET_CONTENT
+    response = await client.delete(f'/account/delete/user_id/{first_user_id}')
+    assert response.status_code == status.HTTP_200_OK
 
     # test change user balance
     response = await client.post(f'/account/create/user_id/{first_user_id}')
@@ -157,5 +157,7 @@ async def test_app(client: AsyncClient):
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
     # test deleted user with history
-    response = await client.post(f'/account/delete/user_id/{first_user_id}')
-    assert response.status_code == status.HTTP_205_RESET_CONTENT
+    response = await client.delete(f'/account/delete/user_id/{first_user_id}')
+    assert response.status_code == status.HTTP_200_OK
+    response = await client.delete(f'/account/delete/user_id/{first_user_id}')
+    assert response.status_code == status.HTTP_404_NOT_FOUND

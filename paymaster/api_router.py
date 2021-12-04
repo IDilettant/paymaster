@@ -57,17 +57,24 @@ async def create_user_acc(
     return Response(status_code=status.HTTP_201_CREATED)
 
 
-@router.post(
+@router.delete(
     '/account/delete/user_id/{user_id}',
-    status_code=status.HTTP_205_RESET_CONTENT,
+    status_code=status.HTTP_200_OK,
 )
 async def delete_user_acc(
     user_id: PositiveInt,
     connection: Connection = Depends(get_connection_from_pool),
 ):
     """Delete user account."""
-    await delete_acc(user_id=user_id, db_con=connection)
-    return Response(status_code=status.HTTP_205_RESET_CONTENT)
+    try:
+        await delete_acc(user_id=user_id, db_con=connection)
+    except AccountError as exc:
+        LOGGER.warning(exc)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account don't exists",
+        )
+    return Response(status_code=status.HTTP_200_OK)
 
 
 @router.post('/balance/change', status_code=status.HTTP_201_CREATED)

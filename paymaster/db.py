@@ -35,11 +35,17 @@ async def delete_acc(user_id: int, db_con: Connection) -> None:
     Args:
         user_id: user id
         db_con: connection to database
+
+    Raises:
+        AccountError: conflict with non existiong account
     """
     acc_query = """ UPDATE accounts
                     SET status = 'deleted'
                     WHERE user_id = ($1);"""
-    await db_con.execute(acc_query, user_id)
+    if await _has_account(user_id, db_con):
+        await db_con.execute(acc_query, user_id)
+    else:
+        raise AccountError(f"Account with id <{user_id}> don't exists")
 
 
 async def change_balance(
