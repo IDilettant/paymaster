@@ -21,7 +21,7 @@ repos:
     -   id: flake8
         name: flake8
         description: wemake-python-styleguide enforcement
-        entry: make test
+        entry: make lint
         language: system
         types: [python]
     -   id: mypy
