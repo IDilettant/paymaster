@@ -9,6 +9,9 @@ pytestmark = pytest.mark.asyncio
 
 
 async def test_app(client: AsyncClient):
+    # FIXME: большой тест слишком, сложно прочитать от начала до конца и проверить, что он составлен корректно
+    # лучше разбить на несколько поменьше
+
     first_user_id = 444
     second_user_id = 555
     nonexistent_user = 321

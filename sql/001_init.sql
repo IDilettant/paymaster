@@ -3,6 +3,9 @@ CREATE TABLE accounts (
     user_id         INTEGER         NOT NULL UNIQUE,
     created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP(2),
     status          VARCHAR(7)      DEFAULT 'active'
+    /*
+    FIXME: можно использовать enum для status
+    */
 );
 
 

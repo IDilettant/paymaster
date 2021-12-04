@@ -17,6 +17,10 @@ from tests.test_currencies import DATA
 @pytest.fixture
 async def dsn() -> Pool:
     with PostgresContainer("postgres:12-alpine") as postgres:
+        # FIXME: непонятно, почему эта «ненужная часть» вообще там
+        # лучше прямо с примерами «как надо» и «как есть» и упомянуть, что
+        # это специфика testcontainers
+
         # delete from db url unnecessary path part
         yield postgres.get_connection_url().replace('+psycopg2', '')
 
