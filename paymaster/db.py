@@ -23,6 +23,9 @@ async def create_acc(user_id: int, db_con: Connection) -> None:
                 VALUES ($1)
                 ON CONFLICT (user_id)
                 DO UPDATE SET status = 'active';"""
+    # FIXME: я бы не смешивал «реактвиацию аккаунта» и создание нового, потому что это принципиально разные операции. У юзера может заблокироваться один счет и создаться новый, это норм.
+    # FIXME: зачем проверка has_account, если можно обработать on conflict при дубликате ключа?
+    # FIXME: если несколько запросов оставляем, то нужна транзакция
     if await _has_account(user_id, db_con):
         raise AccountError(f'Account with id <{user_id}> already exists')
     else:
@@ -42,7 +45,11 @@ async def delete_acc(user_id: int, db_con: Connection) -> None:
     acc_query = """ UPDATE accounts
                     SET status = 'deleted'
                     WHERE user_id = ($1);"""
+    # FIXME: если несколько запросов, то нужна транзакция
     if await _has_account(user_id, db_con):
+        # FIXME: не нужно проверять, чтобы узнать, что такого нет
+        # можно по результату execute проверить, была ли изменена хотя бы одна строка
+        # https://magicstack.github.io/asyncpg/current/api/index.html#asyncpg.connection.Connection.execute
         await db_con.execute(acc_query, user_id)
     else:
         raise AccountError(f"Account with id <{user_id}> don't exists")
@@ -131,6 +138,7 @@ async def get_balance(
     Raises:
         AccountError: user account isn't registered
     """
+    # FIXME: лишний запрос на has_account?
     if await _has_account(user_id, db_con):
         balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE  # noqa: E501
         cur_rate: Decimal = Decimal(1) if convert_to is None else await _fetch_currency_rate(  # noqa: E501
@@ -204,6 +212,7 @@ async def update_currencies(
     await db_con.executemany(query, cur_rates)
 
 
+# FIXME: credit/debit не очень понятные термины имхо
 async def _crediting_balance(
     user_id: int,
     qty_value: Decimal,
@@ -245,6 +254,9 @@ async def _debiting_balance(
     deal_with: Optional[int] = None,
     description: Optional[str] = None,
 ) -> None:
+    # FIXME: кажется много копипасты с пополнения баланса
+    # тут все тоже самое, только добавляется проверка допустимости операции
+    # может можно как-то переиспользовать логику?
     deal_with = user_id if deal_with is None else deal_with
     description = 'withdraw' if description is None else description
     fractional_qty_value = int(qty_value * FRACTIONAL_VALUE)
@@ -257,11 +269,13 @@ async def _debiting_balance(
                      WHERE user_id = $1
                      AND status = 'active'), $2, $3, $4
                 );"""
+    # FIXME: зачем явно проверять, если можно просто словить ошибку в транзакции как на 28 строчке?
+    # если несколько запросов, то нужна транзакция
     if not await _has_account(user_id, db_con):
         raise AccountError(f'Has no registered account with id: {user_id}')
     async with db_con.transaction():
         balance = await _compute_balance(user_id, db_con)
-        if balance - abs(fractional_qty_value) >= 0:
+        if balance - abs(fractional_qty_value) >= 0: # FIXME: если у чувака на балансе 5 рублей, разве можно снять 100 рублей?
             try:
                 await db_con.execute(
                     query,
@@ -305,6 +319,7 @@ async def _get_sort_keys(
     order_by_date: Optional[SortKey],
     order_by_total: Optional[SortKey],
 ):
+
     date_key: str = 'date'
     total_key: str = 'total'
     if order_by_date is None:
@@ -313,6 +328,10 @@ async def _get_sort_keys(
         date_sort_order = 'DESC' if order_by_date == SortKey.desc else 'ASC'
     if order_by_total is not None:
         total_sort_order: str = 'DESC' if order_by_total == SortKey.desc else 'ASC'  # noqa: E501
+    # FIXME: а если еще поле одно добавится для сортировки? Кажется много копипасты придется делать
+    # по сути ключи сортировки имеют вид:
+    # поле DESC/ASC, поле DESC/ASC, поле DESC/ASC
+    # можно ли как-то обобщить логику, чтобы делать для каждого поля одни и те же вещи руками каждый раз
     coma: str = '' if order_by_total is None else ','
     date_key = f'{date_key} {date_sort_order}'
     total_key = '' if order_by_total is None else f'{total_key} {total_sort_order}'  # noqa: E501

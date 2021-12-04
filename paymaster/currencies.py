@@ -19,6 +19,7 @@ async def get_currencies_rates(  # noqa: WPS234
     Returns:
         currencies rates
     """
+    # FIXME: обработка ошибок
     url = f'https://v6.exchangerate-api.com/v6/{api_key}/latest/{base_currency}'
     async with httpx.AsyncClient() as client:
         resp = await client.get(url)

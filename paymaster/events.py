@@ -40,6 +40,9 @@ def create_start_app_handler(
         app.state.pool = await create_pool(dsn)
         if dsn is not None:
             make_migration(dsn)
+        # FIXME: get_currencies_rates вызывается только при старте приложения?
+        # если бэкенд работает неделю без остановки, то мы сильно отстанем по курсу
+        # fastapi умеет из коробки делать «фоновые задачи» асинхронные, посоветовал бы прикрутить в таком виде
         cur_rates = await get_currencies_rates(api_key)
         await update_currencies(cur_rates, app.state.pool)
     return start_app
