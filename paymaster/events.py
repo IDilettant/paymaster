@@ -8,9 +8,10 @@ from typing import Any, Callable, Coroutine, Optional
 
 import schedule
 from asyncpg import Pool, create_pool
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI
 from paymaster.currencies import get_currencies_rates
 from paymaster.database.db import update_currencies
+from paymaster.exceptions import CurrencyError
 from yoyo import get_backend, read_migrations
 
 LOGGER = logging.getLogger('schedule')
@@ -91,7 +92,7 @@ def catch_exceptions(  # noqa: WPS234
         def wrapper(*args):
             try:
                 return job_func(*args)
-            except HTTPException as exc:
+            except CurrencyError as exc:
                 LOGGER.warning(exc)
                 if cancel_on_failure:
                     return schedule.CancelJob

@@ -3,7 +3,7 @@ import logging
 from typing import List, Optional, Tuple
 
 import httpx
-from fastapi import HTTPException
+from paymaster.exceptions import CurrencyError
 
 BASE_CURRENCY = 'rub'
 LOGGER = logging.getLogger(__name__)
@@ -21,14 +21,17 @@ async def get_currencies_rates(  # noqa: WPS234
 
     Returns:
         currencies rates
+
+    Raises:
+        CurrencyError: currency rates source unavailable
     """
     url = f'https://v6.exchangerate-api.com/v6/{api_key}/latest/{base_currency}'
     async with httpx.AsyncClient() as client:
+        resp = await client.get(url)
         try:
-            resp = await client.get(url)
             resp.raise_for_status()
-        except HTTPException:
-            raise 
+        except httpx.HTTPStatusError as exc:
+            raise CurrencyError('Currency rates source unavailable') from exc
         response = resp.json()
         cur_rates = response['conversion_rates']
         return [
