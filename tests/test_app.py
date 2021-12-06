@@ -16,6 +16,10 @@ async def test_app(client: AsyncClient):
     second_user_id = 555
     nonexistent_user = 321
 
+    # test docs
+    response = await client.get(f'/openapi.json')
+    assert response.status_code == status.HTTP_200_OK
+
     # test creating user
     response = await client.post(f'/account/create/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_201_CREATED
