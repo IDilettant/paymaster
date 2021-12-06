@@ -5,11 +5,17 @@ import pathlib
 from typing import Any, Callable, Coroutine, Optional
 
 import schedule
+import functools
+import logging
 from asyncpg import Pool, create_pool
-from fastapi import BackgroundTasks, FastAPI
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from paymaster.currencies import get_currencies_rates
 from paymaster.database.db import update_currencies
 from yoyo import get_backend, read_migrations
+
+logging.basicConfig()
+schedule_logger = logging.getLogger('schedule')
+schedule_logger.setLevel(level=logging.DEBUG)
 
 
 def make_migration(dsn: str) -> None:
@@ -68,6 +74,21 @@ def create_stop_app_handler(
     return stop_app
 
 
+def catch_exceptions(cancel_on_failure=False):
+    def catch_exceptions_decorator(job_func):
+        @functools.wraps(job_func)
+        def wrapper(*args, **kwargs):
+            try:
+                return job_func(*args, **kwargs)
+            except HTTPException as exc:
+                schedule_logger.warning(exc)
+                if cancel_on_failure:
+                    return schedule.CancelJob
+        return wrapper
+    return catch_exceptions_decorator
+
+
+@catch_exceptions(cancel_on_failure=True)
 async def _update_data_currencies(pool: Pool, api_key: Optional[str]):
     cur_rates = await get_currencies_rates(api_key)
     await update_currencies(cur_rates, pool)
