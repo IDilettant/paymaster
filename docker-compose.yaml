@@ -12,7 +12,7 @@ services:
         volumes:
             - pgdata:/var/lib/postgresql/data
 
-    paymaster:
+    app:
         build:
             context: .
             dockerfile: Dockerfile
