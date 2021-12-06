@@ -5,7 +5,20 @@ from typing import Any, Dict, Optional, Tuple
 
 from fastapi import status
 from paymaster.currencies import BASE_CURRENCY
-from pydantic import BaseModel, Field, PositiveInt, condecimal
+from pydantic import BaseModel, ConstrainedDecimal, Field, PositiveInt
+
+
+class TotalValue(ConstrainedDecimal):
+    """Type for validate total value."""
+
+    gt = Decimal(0)
+    decimal_places = 2
+
+
+class BalanceValue(ConstrainedDecimal):
+    """Type for validate balance value."""
+
+    decimal_places = 2
 
 
 class OperationType(str, Enum):  # noqa: WPS600
@@ -27,7 +40,7 @@ class Balance(BaseModel):
 
     status_code: int = Field(status.HTTP_200_OK, ge=100, lt=600)  # noqa: WPS432
     user_id: PositiveInt
-    balance: Decimal = Field(condecimal(decimal_places=2))
+    balance: BalanceValue
     currency: str = Field(BASE_CURRENCY, min_length=3, max_length=3)
 
 
@@ -36,7 +49,7 @@ class Operation(BaseModel):
 
     operation: OperationType
     user_id: PositiveInt
-    total: Decimal = Field(condecimal(gt=Decimal(0), decimal_places=2))
+    total: TotalValue
     description: Optional[str] = Field(None)
 
 
@@ -45,7 +58,7 @@ class Transaction(BaseModel):
 
     sender_id: PositiveInt
     recipient_id: PositiveInt
-    total: Decimal = Field(condecimal(gt=Decimal(0), decimal_places=2))
+    total: TotalValue
     description: Optional[str] = Field(None)
 
 
