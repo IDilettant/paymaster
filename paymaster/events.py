@@ -73,12 +73,24 @@ def create_stop_app_handler(
     return stop_app
 
 
-def catch_exceptions(cancel_on_failure=False):
-    def catch_exceptions_decorator(job_func):
+def catch_exceptions(  # noqa: WPS234
+    cancel_on_failure: bool = False,
+) -> Callable[[Callable[[Any, Optional[str]], Coroutine[Any, Any, Any]]], Any]:  # noqa: WPS221 E501
+    """Make decorator for cathing exceptions in background scheduler.
+
+    Args:
+        cancel_on_failure: flag of finishing on failure scheduler work
+
+    Returns:
+        catch exceptions decorator
+    """
+    def catch_exceptions_decorator(  # noqa: WPS430
+        job_func: Callable[[Any, Optional[str]], Coroutine[Any, Any, Any]],  # noqa: WPS221 E501
+    ):
         @functools.wraps(job_func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args):
             try:
-                return job_func(*args, **kwargs)
+                return job_func(*args)
             except HTTPException as exc:
                 LOGGER.warning(exc)
                 if cancel_on_failure:
