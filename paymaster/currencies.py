@@ -1,9 +1,12 @@
 """Currencies module."""
+import logging
 from typing import List, Optional, Tuple
 
 import httpx
+from fastapi import HTTPException
 
 BASE_CURRENCY = 'rub'
+LOGGER = logging.getLogger(__name__)
 
 
 async def get_currencies_rates(  # noqa: WPS234
@@ -19,11 +22,13 @@ async def get_currencies_rates(  # noqa: WPS234
     Returns:
         currencies rates
     """
-    # FIXME: обработка ошибок
     url = f'https://v6.exchangerate-api.com/v6/{api_key}/latest/{base_currency}'
     async with httpx.AsyncClient() as client:
-        resp = await client.get(url)
-        resp.raise_for_status()
+        try:
+            resp = await client.get(url)
+            resp.raise_for_status()
+        except HTTPException:
+            raise 
         response = resp.json()
         cur_rates = response['conversion_rates']
         return [
