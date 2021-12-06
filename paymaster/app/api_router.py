@@ -12,7 +12,6 @@ from fastapi import (
     Response,
     status,
 )
-from paymaster.currencies import BASE_CURRENCY
 from paymaster.app.data_schemas import (
     Balance,
     Operation,
@@ -20,6 +19,7 @@ from paymaster.app.data_schemas import (
     SortKey,
     Transaction,
 )
+from paymaster.currencies import BASE_CURRENCY
 from paymaster.database.db import (
     FRACTIONAL_VALUE,
     change_balance,

@@ -1,10 +1,12 @@
 """Migrations and up/shutdown handlers."""
+import asyncio
 import os
 import pathlib
 from typing import Any, Callable, Coroutine, Optional
 
-from asyncpg import create_pool
-from fastapi import FastAPI
+import schedule
+from asyncpg import Pool, create_pool
+from fastapi import BackgroundTasks, FastAPI
 from paymaster.currencies import get_currencies_rates
 from paymaster.database.db import update_currencies
 from yoyo import get_backend, read_migrations
@@ -35,16 +37,18 @@ def create_start_app_handler(
         started handler
     """
     async def start_app() -> None:  # noqa: WPS430
+        background_tasks = BackgroundTasks()
         dsn: Optional[str] = os.getenv('DSN')
         api_key: Optional[str] = os.getenv('API_KEY')
         app.state.pool = await create_pool(dsn)
         if dsn is not None:
             make_migration(dsn)
-        # FIXME: get_currencies_rates вызывается только при старте приложения?
-        # если бэкенд работает неделю без остановки, то мы сильно отстанем по курсу
-        # fastapi умеет из коробки делать «фоновые задачи» асинхронные, посоветовал бы прикрутить в таком виде
-        cur_rates = await get_currencies_rates(api_key)
-        await update_currencies(cur_rates, app.state.pool)
+        await _update_data_currencies(app.state.pool, api_key)
+        background_tasks.add_task(
+            _make_regular_currencies_update,
+            app.state.pool,
+            api_key,
+        )
     return start_app
 
 
@@ -62,3 +66,19 @@ def create_stop_app_handler(
     async def stop_app() -> None:  # noqa: WPS430
         await app.state.pool.close()
     return stop_app
+
+
+async def _update_data_currencies(pool: Pool, api_key: Optional[str]):
+    cur_rates = await get_currencies_rates(api_key)
+    await update_currencies(cur_rates, pool)
+
+
+async def _make_regular_currencies_update(pool: Pool, api_key: Optional[str]):
+    schedule.every().day.at('00:00').do(
+        _update_data_currencies,
+        poll=pool,
+        api_key=api_key,
+    )
+    while True:  # noqa: WPS457
+        schedule.run_pending()
+        asyncio.sleep(1)
