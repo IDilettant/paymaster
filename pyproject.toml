@@ -13,6 +13,7 @@ asyncpg = "^0.24.0"
 python-dotenv = "^0.19.2"
 httpx = "^0.21.1"
 yoyo-migrations = "^7.3.2"
+schedule = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
