@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional, Tuple
 
 from asyncpg import Connection, exceptions
-from paymaster.data_schemas import OperationType, SortKey
+from paymaster.app.data_schemas import OperationType, SortKey
 from paymaster.exceptions import AccountError, BalanceValueError, CurrencyError
 
 FRACTIONAL_VALUE = Decimal(100)

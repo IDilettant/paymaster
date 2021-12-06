@@ -1,7 +1,7 @@
 """Main app module."""
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from paymaster.api_router import router
+from paymaster.app.api_router import router
 from paymaster.events import create_start_app_handler, create_stop_app_handler
 
 load_dotenv()
