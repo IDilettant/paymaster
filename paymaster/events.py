@@ -1,21 +1,20 @@
 """Migrations and up/shutdown handlers."""
 import asyncio
+import functools
+import logging
 import os
 import pathlib
 from typing import Any, Callable, Coroutine, Optional
 
 import schedule
-import functools
-import logging
 from asyncpg import Pool, create_pool
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from paymaster.currencies import get_currencies_rates
 from paymaster.database.db import update_currencies
 from yoyo import get_backend, read_migrations
 
-logging.basicConfig()
-schedule_logger = logging.getLogger('schedule')
-schedule_logger.setLevel(level=logging.DEBUG)
+LOGGER = logging.getLogger('schedule')
+LOGGER.setLevel(level=logging.DEBUG)
 
 
 def make_migration(dsn: str) -> None:
@@ -81,7 +80,7 @@ def catch_exceptions(cancel_on_failure=False):
             try:
                 return job_func(*args, **kwargs)
             except HTTPException as exc:
-                schedule_logger.warning(exc)
+                LOGGER.warning(exc)
                 if cancel_on_failure:
                     return schedule.CancelJob
         return wrapper
