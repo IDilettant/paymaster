@@ -6,7 +6,7 @@ from typing import Any, Callable, Coroutine, Optional
 from asyncpg import create_pool
 from fastapi import FastAPI
 from paymaster.currencies import get_currencies_rates
-from paymaster.db import update_currencies
+from paymaster.database.db import update_currencies
 from yoyo import get_backend, read_migrations
 
 

@@ -2,7 +2,7 @@
 import pytest
 from fastapi import status
 from httpx import AsyncClient
-from paymaster.data_schemas import OperationType
+from paymaster.app.data_schemas import OperationType
 from tests.test_currencies import USD_RATE
 
 pytestmark = pytest.mark.asyncio

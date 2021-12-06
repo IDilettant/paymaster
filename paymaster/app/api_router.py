@@ -13,14 +13,14 @@ from fastapi import (
     status,
 )
 from paymaster.currencies import BASE_CURRENCY
-from paymaster.data_schemas import (
+from paymaster.app.data_schemas import (
     Balance,
     Operation,
     PageOut,
     SortKey,
     Transaction,
 )
-from paymaster.db import (
+from paymaster.database.db import (
     FRACTIONAL_VALUE,
     change_balance,
     create_acc,
@@ -29,7 +29,7 @@ from paymaster.db import (
     get_balance,
     transfer_between_accs,
 )
-from paymaster.dependencies import get_connection_from_pool
+from paymaster.database.dependencies import get_connection_from_pool
 from paymaster.exceptions import AccountError, BalanceValueError
 from pydantic import PositiveInt
 
