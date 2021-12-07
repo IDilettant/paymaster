@@ -64,14 +64,14 @@ async def change_balance(
         description: description of transaction aim
     """
     if operation_type == OperationType.replenishment:
-        await _crediting_balance(
+        await _make_replenishment(
             user_id=user_id,
             qty_value=qty_value,
             db_con=db_con,
             description=description,
         )
     elif operation_type == OperationType.withdraw:
-        await _debiting_balance(
+        await _make_withdrawal(
             user_id=user_id,
             qty_value=qty_value,
             db_con=db_con,
@@ -96,14 +96,14 @@ async def transfer_between_accs(
         description: description of transaction aim
     """
     async with db_con.transaction():
-        await _debiting_balance(
+        await _make_withdrawal(
             user_id=sender_id,
             deal_with=recipient_id,
             qty_value=qty_value,
             description='outcoming payment' if description is None else description,  # noqa: E501
             db_con=db_con,
         )
-        await _crediting_balance(
+        await _make_replenishment(
             user_id=recipient_id,
             deal_with=sender_id,
             qty_value=qty_value,
@@ -210,7 +210,7 @@ async def update_currencies(
 
 
 # FIXME: credit/debit не очень понятные термины имхо
-async def _crediting_balance(
+async def _make_replenishment(
     user_id: int,
     qty_value: Decimal,
     db_con: Connection,
@@ -249,7 +249,7 @@ async def _crediting_balance(
             ) from exc
 
 
-async def _debiting_balance(
+async def _make_withdrawal(
     user_id: int,
     qty_value: Decimal,
     db_con: Connection,
