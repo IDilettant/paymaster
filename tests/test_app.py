@@ -147,7 +147,7 @@ async def test_app(client: AsyncClient):
     response = await client.get(f'/balance/get/user_id/{nonexistent_user}')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    # test transaction history with sort
+    # test transaction history
     response = await client.get(f'/transactions/history/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_200_OK
     response = response.json()['content']
@@ -160,6 +160,20 @@ async def test_app(client: AsyncClient):
     assert response[2]['deal_with'] == second_user_id
     assert response[2]['description'] == 'outcoming payment'
     assert response[2]['total'] == -40
+    # history with sorting
+    response = await client.get(f'/transactions/history/user_id/{first_user_id}?order_by_total=asc')
+    assert response.status_code == status.HTTP_200_OK
+    response = response.json()['content']
+    assert response[0]['deal_with'] == second_user_id
+    assert response[0]['description'] == 'outcoming payment'
+    assert response[0]['total'] == -40
+    assert response[1]['deal_with'] == first_user_id
+    assert response[1]['description'] == 'withdraw'
+    assert response[1]['total'] == -10
+    assert response[2]['deal_with'] == first_user_id
+    assert response[2]['description'] == 'replenishment'
+    assert response[2]['total'] == 100
+    # with nonexistent user
     response = await client.get(f'/transactions/history/user_id/{nonexistent_user}')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
