@@ -126,11 +126,8 @@ async def get_balance(
 
     Returns:
         balance value
-
-    Raises:
-        AccountError: user account isn't registered
     """
-    balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE
+    balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE  # noqa: E501
     cur_rate: Decimal = Decimal(1) if convert_to is None else await _fetch_currency_rate(  # noqa: E501
         cur_name=convert_to,
         db_con=db_con,
@@ -299,14 +296,14 @@ async def _get_sort_keys(
     order_by_date: Optional[SortKey],
     order_by_total: Optional[SortKey],
 ):
-    sort_keys = {'date': order_by_date, 'total': order_by_total}
-    result = []
-    for key, order in sort_keys.items():
+    order_by = {'date': order_by_date, 'total': order_by_total}
+    sort_keys = []
+    for key, order in order_by.items():
         if order is not None:
-            order = 'DESC' if order == SortKey.desc else 'ASC'
-            result.append('{0} {1}'.format(key, order))
-    if result:
-        return ', '.join(result)
+            sort_order = 'DESC' if order == SortKey.desc else 'ASC'
+            sort_keys.append('{0} {1}'.format(key, sort_order))
+    if sort_keys:
+        return ', '.join(sort_keys)
     return 'date DESC'
 
 
