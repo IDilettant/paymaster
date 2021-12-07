@@ -130,15 +130,12 @@ async def get_balance(
     Raises:
         AccountError: user account isn't registered
     """
-    # FIXME: лишний запрос на has_account?
-    if await _has_account(user_id, db_con):
-        balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE  # noqa: E501
-        cur_rate: Decimal = Decimal(1) if convert_to is None else await _fetch_currency_rate(  # noqa: E501
-            cur_name=convert_to,
-            db_con=db_con,
-        )
-        return Decimal(round(balance * cur_rate, 2))
-    raise AccountError(f'Has no registered account with id: {user_id}')
+    balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE 
+    cur_rate: Decimal = Decimal(1) if convert_to is None else await _fetch_currency_rate(  # noqa: E501
+        cur_name=convert_to,
+        db_con=db_con,
+    )
+    return Decimal(round(balance * cur_rate, 2))
 
 
 async def fetch_acc_history(  # noqa: WPS210 WPS211
@@ -209,7 +206,6 @@ async def update_currencies(
     await db_con.executemany(query, cur_rates)
 
 
-# FIXME: credit/debit не очень понятные термины имхо
 async def _make_replenishment(
     user_id: int,
     qty_value: Decimal,
@@ -256,43 +252,18 @@ async def _make_withdrawal(
     deal_with: Optional[int] = None,
     description: Optional[str] = None,
 ) -> None:
-    # FIXME: кажется много копипасты с пополнения баланса
-    # тут все тоже самое, только добавляется проверка допустимости операции
-    # может можно как-то переиспользовать логику?
-    deal_with = user_id if deal_with is None else deal_with
     description = 'withdraw' if description is None else description
     fractional_qty_value = int(qty_value * FRACTIONAL_VALUE)
-    query = """ INSERT INTO transactions (
-                    account_id, deal_with, description, qty_change
-                )
-                VALUES (
-                    (SELECT id
-                        FROM accounts
-                        WHERE user_id = $1
-                        AND current_status = 'active'), 
-                    (SELECT id
-                        FROM accounts
-                        WHERE user_id = $2
-                        AND current_status = 'active'),
-                    $3, $4
-                );"""
-    # FIXME: зачем явно проверять, если можно просто словить ошибку в транзакции как на 28 строчке?
-    # если несколько запросов, то нужна транзакция
-    if not await _has_account(user_id, db_con):
-        raise AccountError(f'Has no registered account with id: {user_id}')
     async with db_con.transaction():
         balance = await _compute_balance(user_id, db_con)
-        if balance - abs(fractional_qty_value) >= 0: # FIXME: если у чувака на балансе 5 рублей, разве можно снять 100 рублей?
-            try:
-                await db_con.execute(
-                    query,
-                    user_id,
-                    deal_with,
-                    description,
-                    -fractional_qty_value,  # Make quantity value negative
-                )
-            except exceptions.NotNullViolationError:
-                raise AccountError(f'Has no registered account with id: {deal_with}')  # noqa: E501
+        if balance - fractional_qty_value >= 0:
+            await _make_replenishment(
+                user_id=user_id,
+                qty_value=-qty_value,
+                db_con=db_con,
+                deal_with=deal_with,
+                description=description,
+            )
         else:
             raise BalanceValueError(
                 f'Insufficient funds on the account: {user_id}',
@@ -319,7 +290,9 @@ async def _compute_balance(user_id: int, db_con: Connection) -> Decimal:
                                 AND current_status = 'active'
                             );"""
     balance = await db_con.fetchval(balance_query, user_id)
-    return Decimal(0) if balance is None else Decimal(balance)
+    if balance is None:
+        raise AccountError(f'Has no registered account with id: {user_id}')
+    return Decimal(balance)
 
 
 async def _get_sort_keys(
