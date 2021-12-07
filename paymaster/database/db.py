@@ -130,7 +130,7 @@ async def get_balance(
     Raises:
         AccountError: user account isn't registered
     """
-    balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE 
+    balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE
     cur_rate: Decimal = Decimal(1) if convert_to is None else await _fetch_currency_rate(  # noqa: E501
         cur_name=convert_to,
         db_con=db_con,
@@ -163,13 +163,13 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
         AccountError: user account isn't registered
     """
     offset = (page_number - 1) * page_size
-    primary_key, additional_key, coma = await _get_sort_keys(order_by_date, order_by_total)  # noqa: E501
-    query: str = f"""   SELECT 
-                            DATE(created_at) AS date, 
+    sort_keys = await _get_sort_keys(order_by_date, order_by_total)  # noqa: E501
+    query: str = f"""   SELECT
+                            DATE(created_at) AS date,
                             (SELECT user_id
                                 FROM accounts
-                                WHERE id = deal_with) AS deal_with, 
-                            description, 
+                                WHERE id = deal_with) AS deal_with,
+                            description,
                             qty_change AS total
                             FROM transactions
                             WHERE account_id = (
@@ -178,7 +178,7 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
                                 WHERE user_id = $1
                                 AND current_status = 'active'
                             )
-                            ORDER BY {primary_key}{coma} {additional_key}
+                            ORDER BY {sort_keys}
                             OFFSET $2 LIMIT $3;"""
     history = await db_con.fetch(query, user_id, offset, page_size)
 
@@ -223,7 +223,7 @@ async def _make_replenishment(
                     (SELECT id
                         FROM accounts
                         WHERE user_id = $1
-                        AND current_status = 'active'), 
+                        AND current_status = 'active'),
                     (SELECT id
                         FROM accounts
                         WHERE user_id = $2
@@ -299,23 +299,15 @@ async def _get_sort_keys(
     order_by_date: Optional[SortKey],
     order_by_total: Optional[SortKey],
 ):
-
-    date_key: str = 'date'
-    total_key: str = 'total'
-    if order_by_date is None:
-        date_sort_order: str = 'DESC'
-    else:
-        date_sort_order = 'DESC' if order_by_date == SortKey.desc else 'ASC'
-    if order_by_total is not None:
-        total_sort_order: str = 'DESC' if order_by_total == SortKey.desc else 'ASC'  # noqa: E501
-    # FIXME: а если еще поле одно добавится для сортировки? Кажется много копипасты придется делать
-    # по сути ключи сортировки имеют вид:
-    # поле DESC/ASC, поле DESC/ASC, поле DESC/ASC
-    # можно ли как-то обобщить логику, чтобы делать для каждого поля одни и те же вещи руками каждый раз
-    coma: str = '' if order_by_total is None else ','
-    date_key = f'{date_key} {date_sort_order}'
-    total_key = '' if order_by_total is None else f'{total_key} {total_sort_order}'  # noqa: E501
-    return date_key, total_key, coma
+    sort_keys = {'date': order_by_date, 'total': order_by_total}
+    result = []
+    for key, order in sort_keys.items():
+        if order is not None:
+            order = 'DESC' if order == SortKey.desc else 'ASC'
+            result.append('{0} {1}'.format(key, order))
+    if result:
+        return ', '.join(result)
+    return 'date DESC'
 
 
 async def _has_account(user_id: int, db_con: Connection):
