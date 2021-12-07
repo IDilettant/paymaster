@@ -3,10 +3,14 @@ CREATE TYPE status AS ENUM ('active', 'deleted');
 
 CREATE TABLE accounts (
     id              SERIAL          PRIMARY KEY,
-    user_id         INTEGER         NOT NULL UNIQUE,
+    user_id         INTEGER         NOT NULL,
     created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP(2),
     current_status  status          DEFAULT 'active'
 );
+
+
+CREATE UNIQUE INDEX active_account_index ON accounts (user_id)
+    WHERE current_status = 'active';
 
 
 CREATE TABLE transactions (
@@ -17,7 +21,7 @@ CREATE TABLE transactions (
     description     VARCHAR(255)    NOT NULL,
     qty_change      BIGINT          NOT NULL,
     FOREIGN KEY (account_id) REFERENCES accounts (id),
-    FOREIGN KEY (deal_with) REFERENCES accounts (user_id)
+    FOREIGN KEY (deal_with) REFERENCES accounts (id)
 );
 
 
