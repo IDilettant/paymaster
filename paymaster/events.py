@@ -51,7 +51,7 @@ def create_start_app_handler(
             make_migration(dsn)
         await _update_data_currencies(app.state.pool, api_key)
         background_tasks.add_task(
-            _make_regular_currencies_update,
+            _make_currencies_update_regular,
             app.state.pool,
             api_key,
         )
@@ -106,7 +106,7 @@ async def _update_data_currencies(pool: Pool, api_key: Optional[str]):
     await update_currencies(cur_rates, pool)
 
 
-async def _make_regular_currencies_update(pool: Pool, api_key: Optional[str]):
+async def _make_currencies_update_regular(pool: Pool, api_key: Optional[str]):
     schedule.every().day.at('00:00').do(
         _update_data_currencies,
         poll=pool,
