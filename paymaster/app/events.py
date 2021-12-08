@@ -24,7 +24,9 @@ def make_migration(dsn: str) -> None:
     Args:
         dsn: database url
     """
-    file_path = str(pathlib.Path(__file__).parent / '..' / 'sql')
+    file_path = str(
+        pathlib.Path(__file__).parent / '..' / '..' / 'sql',
+    )
     backend = get_backend(dsn)
     migrations = read_migrations(file_path)
     with backend.lock():
@@ -103,7 +105,8 @@ def catch_exceptions(  # noqa: WPS234
 @catch_exceptions(cancel_on_failure=True)
 async def _update_data_currencies(pool: Pool, api_key: Optional[str]):
     cur_rates = await get_currencies_rates(api_key)
-    await update_currencies(cur_rates, pool)
+    async with pool.acquire() as db_conn:
+        await update_currencies(cur_rates, db_conn)
 
 
 async def _make_currencies_update_regular(pool: Pool, api_key: Optional[str]):
@@ -114,4 +117,4 @@ async def _make_currencies_update_regular(pool: Pool, api_key: Optional[str]):
     )
     while True:  # noqa: WPS457
         schedule.run_pending()
-        asyncio.sleep(1)
+        await asyncio.sleep(1)

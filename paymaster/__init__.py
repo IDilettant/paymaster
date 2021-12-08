@@ -1,1 +1,1 @@
-"""Paymaster application package."""
+"""Paymaster main package."""
