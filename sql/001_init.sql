@@ -15,13 +15,11 @@ CREATE UNIQUE INDEX active_account_index ON accounts (user_id)
 
 CREATE TABLE transactions (
     id              SERIAL          PRIMARY KEY,
-    account_id      INTEGER         NOT NULL,
+    account_id      INTEGER         NOT NULL REFERENCES accounts,
     created_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP(2),
-    deal_with       INTEGER         NOT NULL,
+    deal_with       INTEGER         NOT NULL REFERENCES accounts,
     description     VARCHAR(255)    NOT NULL,
-    qty_change      BIGINT          NOT NULL,
-    FOREIGN KEY (account_id) REFERENCES accounts (id),
-    FOREIGN KEY (deal_with) REFERENCES accounts (id)
+    qty_change      BIGINT          NOT NULL
 );
 
 
