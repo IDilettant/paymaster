@@ -2,7 +2,6 @@
 import os
 from typing import AsyncIterator
 
-import httpx
 import pytest
 from asgi_lifespan import LifespanManager
 from asyncpg import Pool
@@ -30,8 +29,8 @@ def non_mocked_hosts() -> list:
 
 @pytest.fixture
 async def app(httpx_mock: HTTPXMock) -> AsyncIterator[FastAPI]:
-    from paymaster.app.main import \
-        get_application  # local import for testing purpose
+    # local import for testing purpose
+    from paymaster.app.main import get_application
 
     api_key = os.getenv('API_KEY')
     httpx_mock.add_response(
