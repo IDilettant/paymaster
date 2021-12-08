@@ -27,6 +27,7 @@ asgi-lifespan = "^1.0.1"
 psycopg2-binary = "^2.9.2"
 pytest-httpx = "^0.15.0"
 SQLAlchemy = "^1.4.27"
+types-PyYAML = "^6.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

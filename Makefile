@@ -10,7 +10,7 @@ lint:
 	poetry run flake8 paymaster
 
 package-install:
-	python3 -m pip install --user dist/*.whl
+	poetry run python pip install --user dist/*.whl
 
 test:
 	poetry run pytest -v
@@ -30,4 +30,7 @@ complexity-check:
 start-app:
 	poetry run uvicorn --host=0.0.0.0:5000 paymaster.main:app
 
-.PHONY: test paymaster install lint build
+openapi:
+	poetry run python paymaster/scripts/swagger_extractor.py
+
+.PHONY: test paymaster install lint build openapi
