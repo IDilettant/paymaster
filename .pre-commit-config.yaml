@@ -29,6 +29,10 @@ repos:
         entry: make mypy-check
         language: system
         types: [ python ]
+    -   id: openapi
+        name: openapi
+        entry: make openapi
+        language: system
 -   repo: https://github.com/asottile/add-trailing-comma
     rev: v2.1.0
     hooks:

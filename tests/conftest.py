@@ -18,7 +18,7 @@ from tests.test_currencies import DATA
 async def dsn() -> Pool:
     with PostgresContainer("postgres:12-alpine") as postgres:
         # FastAPI expects a link of the form "postgresql://test:test@localhost:<port>/test" to connect to database
-        # Testcontainers-supplied link "postgresql+psycopg2://test:test@localhost:<port>/test" 
+        # Testcontainers-supplied link "postgresql+psycopg2://test:test@localhost:<port>/test"
         # contains an extra part: "+psycopg2". Which needs to get rid of for testing purposes
         yield postgres.get_connection_url().replace('+psycopg2', '')
 
