@@ -44,7 +44,7 @@ async def delete_acc(user_id: int, db_con: Connection) -> None:
     executing_status = await db_con.execute(acc_query, user_id)
     changed_row_num = int(executing_status.split()[-1])
     if changed_row_num == 0:
-        raise AccountError(f"Account with id <{user_id}> don't exists")
+        raise AccountError(f"Account with id <{user_id}> doesn't exists")
 
 
 async def change_balance(
@@ -127,11 +127,12 @@ async def get_balance(
     Returns:
         balance value
     """
-    balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE  # noqa: E501
-    cur_rate: Decimal = Decimal(1) if convert_to is None else await _fetch_currency_rate(  # noqa: E501
-        cur_name=convert_to,
-        db_con=db_con,
-    )
+    async with db_con.transaction():
+        balance: Decimal = await _compute_balance(user_id, db_con) / FRACTIONAL_VALUE  # noqa: E501
+        cur_rate: Decimal = Decimal(1) if convert_to is None else await _fetch_currency_rate(  # noqa: E501
+            cur_name=convert_to,
+            db_con=db_con,
+        )
     return Decimal(round(balance * cur_rate, 2))
 
 
@@ -178,7 +179,6 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
                             ORDER BY {sort_keys}
                             OFFSET $2 LIMIT $3;"""
     history = await db_con.fetch(query, user_id, offset, page_size)
-
     if history:
         history = tuple(map(dict, history))
         return history  # noqa: WPS331
@@ -227,19 +227,18 @@ async def _make_replenishment(
                         AND current_status = 'active'),
                     $3, $4
                 );"""
-    async with db_con.transaction():
-        try:
-            await db_con.execute(
-                query,
-                user_id,
-                deal_with,
-                description,
-                fractional_qty_value,
-            )
-        except exceptions.NotNullViolationError as exc:
-            raise AccountError(
-                f'Has no registered account with id: {user_id}',
-            ) from exc
+    try:
+        await db_con.execute(
+            query,
+            user_id,
+            deal_with,
+            description,
+            fractional_qty_value,
+        )
+    except exceptions.NotNullViolationError as exc:
+        raise AccountError(
+            f'Has no registered account with id: {user_id}',
+        ) from exc
 
 
 async def _make_withdrawal(
@@ -271,7 +270,7 @@ async def _fetch_currency_rate(cur_name: str, db_con: Connection) -> Decimal:
     query = """ SELECT rate_to_base
                 FROM currencies
                 WHERE cur_name = $1;"""
-    rate: float = await db_con.fetchval(query, cur_name)
+    rate: Optional[float] = await db_con.fetchval(query, cur_name)
     if rate is None:
         raise CurrencyError(f'Unsupported currency type: {cur_name}')
     return Decimal(rate)
@@ -286,7 +285,7 @@ async def _compute_balance(user_id: int, db_con: Connection) -> Decimal:
                                 WHERE user_id = $1
                                 AND current_status = 'active'
                             );"""
-    balance = await db_con.fetchval(balance_query, user_id)
+    balance: Optional[float] = await db_con.fetchval(balance_query, user_id)
     if balance is None:
         raise AccountError(f'Has no registered account with id: {user_id}')
     return Decimal(balance)
@@ -296,8 +295,11 @@ async def _get_sort_keys(
     order_by_date: Optional[SortKey],
     order_by_total: Optional[SortKey],
 ):
-    order_by = {'date': order_by_date, 'total': order_by_total}
-    sort_keys = []
+    order_by: Dict[str, Optional[SortKey]] = {
+        'date': order_by_date,
+        'total': order_by_total,
+    }
+    sort_keys: List[str] = []
     for key, order in order_by.items():
         if order is not None:
             sort_order = 'DESC' if order == SortKey.desc else 'ASC'
