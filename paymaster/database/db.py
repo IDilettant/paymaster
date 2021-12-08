@@ -1,6 +1,6 @@
 """Database module."""
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from asyncpg import Connection, exceptions
 from paymaster.app.data_schemas import OperationType, SortKey
@@ -143,7 +143,7 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
     page_size: int = 20,
     order_by_date: Optional[SortKey] = None,
     order_by_total: Optional[SortKey] = None,
-) -> Tuple[Dict[str, str]]:
+) -> Tuple[Dict[Any, Any], ...]:
     """Fetch user account transactions history.
 
     Args:
@@ -161,7 +161,11 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
         AccountError: user account isn't registered
     """
     offset = (page_number - 1) * page_size
-    sort_keys = await _get_sort_keys(order_by_date, order_by_total)  # noqa: E501
+    order_by: Dict[str, Optional[SortKey]] = {
+        'date': order_by_date,
+        'total': order_by_total,
+    }
+    sort_keys = await _get_sort_keys(order_by)  # noqa: E501
     query: str = f"""   SELECT
                             DATE(created_at) AS date,
                             (SELECT user_id
@@ -180,8 +184,7 @@ async def fetch_acc_history(  # noqa: WPS210 WPS211
                             OFFSET $2 LIMIT $3;"""
     history = await db_con.fetch(query, user_id, offset, page_size)
     if history:
-        history = tuple(map(dict, history))
-        return history  # noqa: WPS331
+        return tuple(map(dict, history))
     raise AccountError(f'Has no registered account with id: {user_id}')
 
 
@@ -292,24 +295,19 @@ async def _compute_balance(user_id: int, db_con: Connection) -> Decimal:
 
 
 async def _get_sort_keys(
-    order_by_date: Optional[SortKey],
-    order_by_total: Optional[SortKey],
-):
-    order_by: Dict[str, Optional[SortKey]] = {
-        'date': order_by_date,
-        'total': order_by_total,
-    }
+    order_by: Dict[str, Optional[SortKey]],
+) -> str:
     sort_keys: List[str] = []
     for key, order in order_by.items():
         if order is not None:
-            sort_order = 'DESC' if order == SortKey.desc else 'ASC'
+            sort_order: str = 'DESC' if order == SortKey.desc else 'ASC'
             sort_keys.append('{0} {1}'.format(key, sort_order))
     if sort_keys:
         return ', '.join(sort_keys)
     return 'date DESC'
 
 
-async def _has_account(user_id: int, db_con: Connection):
+async def _has_account(user_id: int, db_con: Connection) -> bool:
     query = """ SELECT user_id
                 FROM accounts
                 WHERE user_id = $1

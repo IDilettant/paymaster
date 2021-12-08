@@ -188,7 +188,7 @@ async def get_user_history(  # noqa: WPS211
 ):
     """Get history of user account transactions."""
     try:
-        history: Tuple[Dict[str, Any]] = await fetch_acc_history(
+        history: Tuple[Dict[Any, Any], ...] = await fetch_acc_history(
             user_id=user_id,
             db_con=connection,
             page_size=page_size,
