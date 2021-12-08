@@ -1,22 +1,21 @@
-from datetime import datetime
-
-import freezegun as freezegun
-import httpx
+import freezegun
 import pytest
+from httpx import AsyncClient, Request, Response
+from paymaster.app.data_schemas import OperationType
 from paymaster.currencies import BASE_CURRENCY, get_currencies_rates
 from pytest_httpx import HTTPXMock
 
 pytestmark = pytest.mark.asyncio
 
-USD_RATE = 0.01326
+usd_rate = 0.06231
 json_data = {
     'result': 'success', 'base_code': 'RUB',
-    'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': USD_RATE},
+    'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': usd_rate},
 }
 
 
-def custom_response(request: httpx.Request, *args, **kwargs):
-    return httpx.Response(
+def custom_response(request: Request, *args, **kwargs):
+    return Response(
         status_code=200, json=json_data,
     )
 
@@ -28,4 +27,26 @@ async def test_get_currencies_rates(httpx_mock: HTTPXMock):
     assert cur_rate[0][0] == BASE_CURRENCY.upper()
     assert cur_rate[0][1] == 1
     assert cur_rate[1][0] == 'USD'
-    assert cur_rate[1][1] == USD_RATE
+    assert cur_rate[1][1] == usd_rate
+
+
+# @freezegun.freeze_time('1970-01-01 00:00:00')
+# async def test_background_currencies_update(
+#     httpx_mock: HTTPXMock,
+#     client: AsyncClient,
+# ):
+#     httpx_mock.add_callback(custom_response)
+#     user_id = 42
+#     await client.post(f'/account/create/user_id/{user_id}')
+#     await client.post(
+#         '/balance/change',
+#         json={
+#             'operation': OperationType.replenishment,
+#             'user_id': user_id,
+#             'total': 1,
+#             'description': OperationType.replenishment,
+#         },
+#     )
+#     response = await client.get(f'/balance/get/user_id/{user_id}?currency=usd')
+#     response = response.json()
+#     assert response['balance'] == round(usd_rate, 2)

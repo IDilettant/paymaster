@@ -10,7 +10,12 @@ from httpx import AsyncClient
 from paymaster.currencies import BASE_CURRENCY
 from pytest_httpx import HTTPXMock
 from testcontainers.postgres import PostgresContainer
-from tests.test_currencies import json_data
+
+USD_RATE = 0.01326
+json_data = {
+    'result': 'success', 'base_code': 'RUB',
+    'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': USD_RATE},
+}
 
 
 @pytest.fixture
