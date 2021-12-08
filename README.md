@@ -8,21 +8,26 @@
 
 
 ## Description
-
-
-The library was implemented in accordance with the test assignment for the Avito internship as a back-end developer
-
-## Features
-
+Paymaster is a microservice providing REST API for creating and interacting with the user's money balance.
 
 ## Installation
 ```bash
-
+python3 -m pip install git+https://github.com/Dilettant/paymaster.git
 ```
+
+## Features
+- Create user account
+- Delete user account
+- Change user balance: replenishment and withdrawal
+- Transfer funds between user accounts
+- Get user account balance with the ability to convert the balance value into an optionally selectable currency
+- Get user account transactions history with the ability to sort by date and total
+
+A more detailed description of the documentation can be found in the automatically generated [openapi file]().
+Or in interactive documentation mode after deploying the application using the link "http://{hostname}/openapi.json"
 
 ## Usage
-```python
-
+Install Paymaster on system and from root app directory execute:
+```bash
+make compose
 ```
-
-## Usage examples
