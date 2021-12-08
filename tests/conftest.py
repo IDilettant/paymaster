@@ -10,7 +10,7 @@ from httpx import AsyncClient
 from paymaster.currencies import BASE_CURRENCY
 from pytest_httpx import HTTPXMock
 from testcontainers.postgres import PostgresContainer
-from tests.test_currencies import DATA
+from tests.test_currencies import json_data
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ async def app(httpx_mock: HTTPXMock) -> AsyncIterator[FastAPI]:
     httpx_mock.add_response(
         method='GET',
         url=f'https://v6.exchangerate-api.com/v6/{api_key}/latest/{BASE_CURRENCY}',
-        json=DATA,
+        json=json_data,
         status_code=200,
     )
 
