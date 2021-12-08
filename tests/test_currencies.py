@@ -1,3 +1,6 @@
+from datetime import datetime
+
+import freezegun as freezegun
 import httpx
 import pytest
 from paymaster.currencies import BASE_CURRENCY, get_currencies_rates
@@ -6,7 +9,7 @@ from pytest_httpx import HTTPXMock
 pytestmark = pytest.mark.asyncio
 
 USD_RATE = 0.01326
-DATA = {
+json_data = {
     'result': 'success', 'base_code': 'RUB',
     'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': USD_RATE},
 }
@@ -14,7 +17,7 @@ DATA = {
 
 def custom_response(request: httpx.Request, *args, **kwargs):
     return httpx.Response(
-        status_code=200, json=DATA,
+        status_code=200, json=json_data,
     )
 
 
