@@ -28,7 +28,7 @@ complexity-check:
 	poetry run flake8 --max-cognitive-complexity=5 $(file)
 
 start-app:
-	poetry run uvicorn --host=0.0.0.0:5000 paymaster.app.main:app
+	poetry run uvicorn --host=0.0.0.0:5000 paymaster.scripts.main:app
 
 openapi:
 	poetry run python paymaster/scripts/swagger_extractor.py
