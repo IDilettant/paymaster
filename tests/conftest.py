@@ -35,7 +35,7 @@ def non_mocked_hosts() -> list:
 @pytest.fixture
 async def app(httpx_mock: HTTPXMock) -> AsyncIterator[FastAPI]:
     # local import for testing purpose
-    from paymaster.app.main import get_application
+    from paymaster.scripts.main import get_application
 
     api_key = os.getenv('API_KEY')
     httpx_mock.add_response(

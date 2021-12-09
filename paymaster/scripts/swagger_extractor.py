@@ -1,6 +1,6 @@
 """Extractor openapi documentation from app."""
 import yaml
-from paymaster.app.main import app
+from paymaster.scripts.main import app
 
 if __name__ == '__main__':
     openapi_data = app.openapi()
