@@ -73,6 +73,17 @@ async def test_change_user_balance(client: AsyncClient):
     response = await client.post(
         '/balance/change',
         json={
+            'operation': OperationType.withdraw,
+            'user_id': first_user_id,
+            'total': 10,
+            'description': OperationType.withdraw,
+        },
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    # with nonexistent user
+    response = await client.post(
+        '/balance/change',
+        json={
             'operation': OperationType.replenishment,
             'user_id': nonexistent_user,
             'total': 100,
@@ -90,6 +101,7 @@ async def test_change_user_balance(client: AsyncClient):
         },
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
+    # insufficient funds
     response = await client.post(
         '/balance/change',
         json={
@@ -100,16 +112,6 @@ async def test_change_user_balance(client: AsyncClient):
         },
     )
     assert response.status_code == status.HTTP_409_CONFLICT
-    response = await client.post(
-        '/balance/change',
-        json={
-            'operation': OperationType.withdraw,
-            'user_id': first_user_id,
-            'total': 10,
-            'description': OperationType.withdraw,
-        },
-    )
-    assert response.status_code == status.HTTP_201_CREATED
 
 
 async def test_transfer_funds_between_users_accounts(client: AsyncClient):
