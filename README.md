@@ -10,11 +10,6 @@
 ## Description
 Paymaster is a microservice providing REST API for creating and interacting with the user's money balance.
 
-## Installation
-```bash
-python3 -m pip install git+https://github.com/Dilettant/paymaster.git
-```
-
 ## Features
 - Create user account
 - Delete user account
@@ -26,8 +21,12 @@ python3 -m pip install git+https://github.com/Dilettant/paymaster.git
 A more detailed description of the documentation can be found in the automatically generated [openapi file]().
 Or in interactive documentation mode after deploying the application using the link "http://{hostname}/openapi.json"
 
-## Usage
-Install Paymaster on system and from root app directory execute:
+## Deploy
+Copy repository to system
 ```bash
-make compose
+$ git clone https://github.com/IDilettant/paymaster.git
+```
+Docker must be installed. Just execute from paymaster root directory:
+```bash
+$ make compose
 ```
