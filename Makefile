@@ -33,4 +33,7 @@ start-app:
 openapi:
 	poetry run python paymaster/scripts/swagger_extractor.py
 
+run-background:
+	poetry run python paymaster/scripts/background_tasks.py
+
 .PHONY: test paymaster install lint build openapi
