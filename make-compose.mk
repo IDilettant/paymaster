@@ -1,9 +1,6 @@
 compose:
 	docker-compose up -d
 
-compose-production:
-	docker-compose --file docker-compose.yml run paymaster
-
 compose-build:
 	docker-compose build
 
