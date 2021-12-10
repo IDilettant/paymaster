@@ -8,7 +8,7 @@ services:
             POSTGRES_HOST_AUTH_METHOD: trust
             POSTGRES_DB: treasury
         ports:
-            - "5432"
+            - "5432:5432"
         volumes:
             - pgdata:/var/lib/postgresql/data
 
@@ -24,6 +24,17 @@ services:
             - "./paymaster/:/usr/src/app/paymaster"
         ports:
             -  "5000:5000"
+        depends_on:
+            - postgres
+
+    background:
+        build:
+            context: ./paymaster/scripts
+            dockerfile: Dockerfile
+        container_name: background
+        restart: unless-stopped
+        env_file:
+            - .env
         depends_on:
             - postgres
 
