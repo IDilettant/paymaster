@@ -12,7 +12,7 @@ from paymaster.currencies import BASE_CURRENCY, get_currencies_rates
 from paymaster.scripts.background_tasks import (
     _run_background_job,
     _set_task,
-    fetch_and_update_data_currencies,
+    update_currency_rates_job,
 )
 from pytest_httpx import HTTPXMock
 
@@ -48,8 +48,7 @@ async def test_background_currencies_update(
 ):
     db_conn = await connect(dsn)
     httpx_mock.add_callback(custom_response)
-    api_key = 'some_api_key'
-    await fetch_and_update_data_currencies(db_conn, api_key)
+    await update_currency_rates_job(db_conn)
     now = datetime(1970, 1, 1, 00, 00)
     with freezegun.freeze_time(now) as frozen_date:
         job_thread = threading.Thread(

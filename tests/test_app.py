@@ -4,7 +4,7 @@ from asyncpg import connect
 from fastapi import status
 from httpx import AsyncClient
 from paymaster.app.data_schemas import OperationType
-from paymaster.scripts.background_tasks import fetch_and_update_data_currencies
+from paymaster.scripts.background_tasks import update_currency_rates_job
 from tests.test_currencies import USD_RATE, custom_response
 
 pytestmark = pytest.mark.asyncio
@@ -183,8 +183,7 @@ async def test_getting_user_balance(client: AsyncClient, httpx_mock, dsn):
     # tests preparing
     db_conn = await connect(dsn)
     httpx_mock.add_callback(custom_response)
-    api_key = 'some_api_key'
-    await fetch_and_update_data_currencies(db_conn, api_key)
+    await update_currency_rates_job(db_conn)
     await client.post(f'/account/create/user_id/{first_user_id}')
     await client.post(f'/account/create/user_id/{second_user_id}')
     await client.post(
