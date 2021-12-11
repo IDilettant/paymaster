@@ -7,5 +7,3 @@ RUN python -m pip install poetry
 RUN make install
 
 EXPOSE 5000
-
-CMD make start-app
