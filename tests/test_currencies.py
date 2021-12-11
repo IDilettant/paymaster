@@ -1,21 +1,27 @@
+"""Currencies test module."""
+import threading
 import time
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 
 import freezegun
 import pytest
+from asyncpg import connect
 from httpx import AsyncClient, Request, Response
 from paymaster.app.data_schemas import OperationType
 from paymaster.currencies import BASE_CURRENCY, get_currencies_rates
+from paymaster.scripts.background_tasks import (
+    _run_background_job,
+    _set_task,
+    fetch_and_update_data_currencies,
+)
 from pytest_httpx import HTTPXMock
-
-from paymaster.scripts.background_tasks import set_task, run_background_job, run_continuously
 
 pytestmark = pytest.mark.asyncio
 
-usd_rate = 0.06231
+USD_RATE = 0.0132
 json_data = {
     'result': 'success', 'base_code': 'RUB',
-    'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': usd_rate},
+    'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': USD_RATE},
 }
 
 
@@ -32,21 +38,26 @@ async def test_get_currencies_rates(httpx_mock: HTTPXMock):
     assert cur_rate[0][0] == BASE_CURRENCY.upper()
     assert cur_rate[0][1] == 1
     assert cur_rate[1][0] == 'USD'
-    assert cur_rate[1][1] == usd_rate
+    assert cur_rate[1][1] == USD_RATE
 
 
-# @freezegun.freeze_time('1970-01-01 00:00')
 async def test_background_currencies_update(
     httpx_mock: HTTPXMock,
     client: AsyncClient,
+    dsn: str,
 ):
-    # with freezegun.freeze_time('1970-01-01 00:00'):
-    now = datetime(2020, 1, 1, 10, 31)
+    db_conn = await connect(dsn)
+    httpx_mock.add_callback(custom_response)
+    api_key = 'some_api_key'
+    await fetch_and_update_data_currencies(db_conn, api_key)
+    now = datetime(1970, 1, 1, 00, 00)
     with freezegun.freeze_time(now) as frozen_date:
-        httpx_mock.add_callback(custom_response)
-        set_task(run_background_job, '10:30')
+        job_thread = threading.Thread(
+            target=_set_task, args=(_run_background_job, '00:00'),
+        )
+        job_thread.start()
         frozen_date.move_to(now + timedelta(days=1))
-        time.sleep(5)
+        time.sleep(1)
         user_id = 42
         await client.post(f'/account/create/user_id/{user_id}')
         await client.post(
@@ -58,6 +69,7 @@ async def test_background_currencies_update(
                 'description': OperationType.replenishment,
             },
         )
-        response = await client.get(f'/balance/get/user_id/{user_id}?currency=usd')
+        response = await client.get(f'/balance/get/user_id/{user_id}?currency=USD')
         response = response.json()
-        assert response['balance'] == round(usd_rate, 2)
+        assert response['balance'] == round(USD_RATE, 2)
+        job_thread.join(1.0)
