@@ -33,6 +33,7 @@ jobs:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
           API_KEY: ${{secrets.API_KEY}}
           DSN: ${{secrets.DSN}}
+          TRIGGER_TIME: ${{secrets.TRIGGER_TIME}}
         with:
           coverageCommand: make test-coverage
           debug: true

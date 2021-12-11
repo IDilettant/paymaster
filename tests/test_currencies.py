@@ -19,7 +19,10 @@ from pytest_httpx import HTTPXMock
 
 pytestmark = pytest.mark.asyncio
 
+load_dotenv()
+
 USD_RATE = 0.0132
+TRIGGER_TIME = os.getenv('TRIGGER_TIME')
 json_data = {
     'result': 'success', 'base_code': 'RUB',
     'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': USD_RATE},
@@ -47,9 +50,7 @@ async def test_background_currencies_update(
     client: AsyncClient,
     dsn: str,
 ):
-    load_dotenv()
-    trigger_time = os.getenv('TRIGGER_TIME')
-    hour, minute = [int(timer) for timer in trigger_time.split(':')]
+    hour, minute = [int(timer) for timer in TRIGGER_TIME.split(':')]
     db_conn = await connect(dsn)
     httpx_mock.add_callback(custom_response)
     await update_currency_rates_job(db_conn)
