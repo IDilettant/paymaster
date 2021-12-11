@@ -48,14 +48,10 @@ def catch_exceptions(  # noqa: WPS234
     return catch_exceptions_decorator
 
 
-async def fetch_and_update_data_currencies(db_conn: Connection, api_key: Optional[str]) -> None:  # noqa: D103 E501
-    cur_rates = await get_currencies_rates(api_key)
-    await update_currencies(cur_rates, db_conn)
-
-
-async def _run_background_job() -> None:
+async def update_currency_rates_job() -> None:  # noqa: D103 E501
     db_conn = await connect(DSN)
-    await fetch_and_update_data_currencies(db_conn, API_KEY)
+    cur_rates = await get_currencies_rates(API_KEY)
+    await update_currencies(cur_rates, db_conn)
 
 
 @catch_exceptions(cancel_on_failure=True)  # type: ignore
@@ -73,6 +69,5 @@ def _set_task(
 
 
 if __name__ == '__main__':
-    connection = await connect(DSN)
-    fetch_and_update_data_currencies(db_conn=connection, api_key=API_KEY)
-    _set_task(_run_background_job, '12:31')
+    asyncio.run(update_currency_rates_job())
+    _set_task(update_currency_rates_job, '18:11')
