@@ -1,9 +1,11 @@
 """Application test module."""
 import pytest
+from asyncpg import connect
 from fastapi import status
 from httpx import AsyncClient
 from paymaster.app.data_schemas import OperationType
-from tests.conftest import USD_RATE
+from paymaster.scripts.background_tasks import fetch_and_update_data_currencies
+from tests.test_currencies import USD_RATE, custom_response
 
 pytestmark = pytest.mark.asyncio
 
@@ -177,8 +179,12 @@ async def test_transfer_funds_between_users_accounts(client: AsyncClient):
     assert response.status_code == status.HTTP_409_CONFLICT
 
 
-async def test_getting_user_balance(client: AsyncClient):
+async def test_getting_user_balance(client: AsyncClient, httpx_mock, dsn):
     # tests preparing
+    db_conn = await connect(dsn)
+    httpx_mock.add_callback(custom_response)
+    api_key = 'some_api_key'
+    await fetch_and_update_data_currencies(db_conn, api_key)
     await client.post(f'/account/create/user_id/{first_user_id}')
     await client.post(f'/account/create/user_id/{second_user_id}')
     await client.post(
