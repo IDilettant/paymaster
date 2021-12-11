@@ -59,13 +59,11 @@ async def _run_background_job() -> None:
 
 
 @catch_exceptions(cancel_on_failure=True)  # type: ignore
-def _set_task(
-    task,
-    trigger_time,
-) -> None:
+def _set_task() -> None:
+    trigger_time = os.getenv('TRIGGER_TIME')
     schedule.every().day.at(trigger_time).do(
         asyncio.run,
-        task(),
+        _run_background_job(),
     )
     while True:  # noqa: WPS457
         schedule.run_pending()
@@ -74,4 +72,4 @@ def _set_task(
 
 if __name__ == '__main__':
     asyncio.run(_run_background_job())
-    _set_task(_run_background_job, '18:11')
+    _set_task()
