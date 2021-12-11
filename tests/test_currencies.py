@@ -1,4 +1,5 @@
 """Currencies test module."""
+import os
 import threading
 import time
 from datetime import datetime, timedelta
@@ -6,11 +7,11 @@ from datetime import datetime, timedelta
 import freezegun
 import pytest
 from asyncpg import connect
+from dotenv import load_dotenv
 from httpx import AsyncClient, Request, Response
 from paymaster.app.data_schemas import OperationType
 from paymaster.currencies import BASE_CURRENCY, get_currencies_rates
 from paymaster.scripts.background_tasks import (
-    _run_background_job,
     _set_task,
     update_currency_rates_job,
 )
@@ -46,14 +47,15 @@ async def test_background_currencies_update(
     client: AsyncClient,
     dsn: str,
 ):
+    load_dotenv()
+    trigger_time = os.getenv('TRIGGER_TIME')
+    hour, minute = [int(timer) for timer in trigger_time.split(':')]
     db_conn = await connect(dsn)
     httpx_mock.add_callback(custom_response)
     await update_currency_rates_job(db_conn)
-    now = datetime(1970, 1, 1, 00, 00)
+    now = datetime(1970, 1, 1, hour, minute)
     with freezegun.freeze_time(now) as frozen_date:
-        job_thread = threading.Thread(
-            target=_set_task, args=(_run_background_job, '00:00'),
-        )
+        job_thread = threading.Thread(target=_set_task)
         job_thread.start()
         frozen_date.move_to(now + timedelta(days=1))
         time.sleep(1)

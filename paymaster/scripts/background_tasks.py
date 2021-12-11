@@ -24,7 +24,7 @@ DSN: Optional[str] = os.getenv('DSN')
 
 def catch_exceptions(  # noqa: WPS234
     cancel_on_failure: bool = False,
-) -> Callable[[Callable[[Callable[[Any, Any], None]], Any]], Any]:  # noqa: WPS221 E501
+) -> Callable[[Callable[[], Any]], Any]:  # noqa: WPS221 E501
     """Make decorator for cathing exceptions in background scheduler.
 
     Args:
@@ -34,12 +34,12 @@ def catch_exceptions(  # noqa: WPS234
         catch exceptions decorator
     """
     def catch_exceptions_decorator(  # noqa: WPS430
-        job_func: Callable[[Callable[[Any, Any], None]], Any],  # noqa: WPS221 E501
+        job_func: Callable[[], Any],  # noqa: WPS221 E501
     ):
         @functools.wraps(job_func)
-        def wrapper(*args):
+        def wrapper():
             try:
-                return job_func(*args)
+                return job_func()
             except (CurrencyError, RuntimeError) as exc:
                 LOGGER.warning(exc)
                 if cancel_on_failure:
@@ -58,7 +58,7 @@ async def _run_background_job() -> None:
     await update_currency_rates_job(db_conn)
 
 
-@catch_exceptions(cancel_on_failure=True)  # type: ignore
+@catch_exceptions(cancel_on_failure=True)
 def _set_task() -> None:
     trigger_time = os.getenv('TRIGGER_TIME')
     schedule.every().day.at(trigger_time).do(
