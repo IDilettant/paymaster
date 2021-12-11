@@ -5,7 +5,6 @@ from typing import Any, Callable, Coroutine, Optional
 
 from asyncpg import create_pool
 from fastapi import FastAPI
-from paymaster.scripts.background_tasks import update_data_currencies
 from yoyo import get_backend, read_migrations
 
 
@@ -37,11 +36,9 @@ def create_start_app_handler(
     """
     async def start_app() -> None:  # noqa: WPS430
         dsn: Optional[str] = os.getenv('DSN')
-        api_key: Optional[str] = os.getenv('API_KEY')
         app.state.pool = await create_pool(dsn)
         if dsn is not None:
             make_migration(dsn)
-        await update_data_currencies(app.state.pool, api_key)
     return start_app
 
 

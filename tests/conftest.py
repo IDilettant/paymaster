@@ -4,22 +4,13 @@ from typing import AsyncIterator
 
 import pytest
 from asgi_lifespan import LifespanManager
-from asyncpg import Pool
 from fastapi import FastAPI
 from httpx import AsyncClient
-from paymaster.currencies import BASE_CURRENCY
-from pytest_httpx import HTTPXMock
 from testcontainers.postgres import PostgresContainer
-
-USD_RATE = 0.01326
-json_data = {
-    'result': 'success', 'base_code': 'RUB',
-    'conversion_rates': {BASE_CURRENCY.upper(): 1, 'USD': USD_RATE},
-}
 
 
 @pytest.fixture
-async def dsn() -> Pool:
+async def dsn() -> str:
     with PostgresContainer("postgres:12-alpine") as postgres:
         # FastAPI expects a link of the form "postgresql://test:test@localhost:<port>/test" to connect to database
         # Testcontainers-supplied link "postgresql+psycopg2://test:test@localhost:<port>/test"
@@ -33,17 +24,9 @@ def non_mocked_hosts() -> list:
 
 
 @pytest.fixture
-async def app(httpx_mock: HTTPXMock) -> AsyncIterator[FastAPI]:
+async def app() -> AsyncIterator[FastAPI]:
     # local import for testing purpose
     from paymaster.scripts.main import get_application
-
-    api_key = os.getenv('API_KEY')
-    httpx_mock.add_response(
-        method='GET',
-        url=f'https://v6.exchangerate-api.com/v6/{api_key}/latest/{BASE_CURRENCY}',
-        json=json_data,
-        status_code=200,
-    )
 
     yield get_application()
 
