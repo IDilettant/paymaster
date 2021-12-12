@@ -16,7 +16,7 @@ Paymaster is a microservice providing REST API for creating and interacting with
 - Change user balance: replenishment and withdrawal
 - Transfer funds between user accounts
 - Get user account balance with the ability to convert the balance value into an optionally selectable currency
-- Get user account transactions history with the ability to sort by date and total
+- Get user account transactions history with the ability to sort by date and/or total and with paging pagination
 - Update currencies rates in background auto mode
 
 A more detailed description of the documentation can be found in the automatically generated [openapi file](https://github.com/IDilettant/paymaster/blob/main/doc/openapi.yml).
