@@ -21,7 +21,7 @@ interacting with it as part of the microservice architecture using the REST API 
 - Update currencies rates in background auto mode
 
 A more detailed description of the documentation can be found in the automatically generated [openapi file](https://github.com/IDilettant/paymaster/blob/main/doc/openapi.yml).
-Or in interactive documentation mode after deploying the application using the link "http://{hostname}/openapi.json"
+Or in interactive documentation mode after deploying the application using the link like "http://{hostname}/openapi.json"
 
 ## Deploy
 Copy repository to system
