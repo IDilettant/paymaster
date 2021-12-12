@@ -8,7 +8,8 @@
 
 
 ## Description
-Paymaster is a microservice providing REST API for creating and interacting with the user's money balance.
+Paymaster is a completely asynchronous service that provides the ability to create a user wallet with a cash balance and
+interacting with it as part of the microservice architecture using the REST API request structure
 
 ## Features
 - Create user account
