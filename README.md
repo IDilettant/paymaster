@@ -19,7 +19,7 @@ Paymaster is a microservice providing REST API for creating and interacting with
 - Get user account transactions history with the ability to sort by date and total
 - Update currencies rates in background auto mode
 
-A more detailed description of the documentation can be found in the automatically generated [openapi file]().
+A more detailed description of the documentation can be found in the automatically generated [openapi file](https://github.com/IDilettant/paymaster/blob/main/doc/openapi.yml).
 Or in interactive documentation mode after deploying the application using the link "http://{hostname}/openapi.json"
 
 ## Deploy
