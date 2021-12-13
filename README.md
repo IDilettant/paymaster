@@ -34,7 +34,7 @@ Check `.env` file and tweak configs if you need.
 | env | purpose | example | 
 | --- | ------- | ------ |
 | TRIGGER_TIME | time for updating currency rates table | `00:00` | 
-| API_KEY | key for currency rates source authentication (https://v6.exchangerate-api.com) | `f68e13y36190f4928a4cf279` | 
+| API_KEY | key for currency rates source authentication | `f68e13y36190f4928a4cf279` (https://v6.exchangerate-api.com) | 
 | DSN | PostgreSQL connection url | `postgresql://user:password@tcp(localhost:5432)/treasury` |
 
 ## Deploy
