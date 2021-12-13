@@ -23,11 +23,21 @@ interacting with it as part of the microservice architecture using the REST API 
 A more detailed description of the documentation can be found in the automatically generated [openapi file](https://github.com/IDilettant/paymaster/blob/main/doc/openapi.yml).
 Or in interactive documentation mode after deploying the application using the link like "http://{hostname}/openapi.json"
 
-## Deploy
-Copy repository to system
+## Usage
+Copy repository to system.
 ```bash
 $ git clone https://github.com/IDilettant/paymaster.git
 ```
+
+### Configuration
+Check `.env` file and tweak configs if you need.
+| env | purpose | example | 
+| --- | ------- | ------ |
+| TRIGGER_TIME | time for updating currency rates table | `00:00` | 
+| API_KEY | key for currency rates source authentication | `f68e13y36190f4928a4cf279` | 
+| DSN | PostgreSQL connection url | `postgresql://user:password@tcp(localhost:5432)/treasury` |
+
+## Deploy
 Docker must be installed. Just execute from paymaster root directory:
 ```bash
 $ make compose
