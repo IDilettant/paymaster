@@ -31,7 +31,7 @@ async def test_swagger_doc_and_create_delete_acc(client: AsyncClient):
     response = await client.delete(f'/account/delete/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    # test deleted user with history
+    # test deleting user with history
     response = await client.post(f'/account/create/user_id/{first_user_id}')
     assert response.status_code == status.HTTP_201_CREATED
     await client.post(
