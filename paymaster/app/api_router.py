@@ -72,7 +72,7 @@ async def delete_user_acc(
         LOGGER.warning(exc)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Account don't exists",
+            detail="Account doesn't exists",
         )
     return Response(status_code=status.HTTP_200_OK)
 
